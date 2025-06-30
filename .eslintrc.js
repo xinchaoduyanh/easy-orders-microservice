@@ -9,7 +9,7 @@ module.exports = {
   parserOptions: {
     project: [
       './orders-app/tsconfig.json', // Đường dẫn tới tsconfig của orders-app
-      './payments-app/tsconfig.json' // Đường dẫn tới tsconfig của payments-app
+      './payments-app/tsconfig.json', // Đường dẫn tới tsconfig của payments-app
     ],
     sourceType: 'module',
   },
@@ -23,7 +23,8 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
-    'prettier/prettier': [ // Tùy chỉnh quy tắc Prettier trong ESLint
+    'prettier/prettier': [
+      // Tùy chỉnh quy tắc Prettier trong ESLint
       'error',
       {
         endOfLine: 'auto', // Tự động xử lý ký tự xuống dòng (quan trọng cho Windows/Linux)

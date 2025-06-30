@@ -1,0 +1,42 @@
+// orders-app/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id          String     @id @default(uuid()) @map("_id")
+  userId      String     // Giả định có userId để liên kết với người dùng
+  totalAmount Decimal    @db.Decimal(10, 2)
+  status      OrderStatus @default(CREATED) // Trạng thái đơn hàng
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  orderItems  OrderItem[] // Liên kết một-nhiều với OrderItem
+
+  @@map("orders") // Tên bảng trong DB sẽ là 'orders'
+}
+
+model OrderItem {
+  id        String   @id @default(uuid()) @map("_id")
+  orderId   String   // Foreign key tới Order
+  order     Order    @relation(fields: [orderId], references: [id])
+  productId String   // ID của sản phẩm (giả định)
+  quantity  Int
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("order_items") // Tên bảng trong DB sẽ là 'order_items'
+}
+
+enum OrderStatus {
+  CREATED      // Đơn hàng vừa được tạo
+  CONFIRMED    // Đã xác nhận (sau khi thanh toán)
+  DELIVERED    // Đã giao hàng
+  CANCELLED    // Đã hủy
+}
