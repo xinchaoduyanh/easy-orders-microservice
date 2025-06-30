@@ -19,10 +19,10 @@ export class OrdersController {
 
   constructor(private readonly ordersService: OrdersService) {}
 
-  @Post()
+  @Post() // Đảm bảo decorator này đúng
   @HttpCode(HttpStatus.CREATED) // Trả về 201 Created
   async createOrder(@Body() createOrderDto: CreateOrderDto) {
-    this.logger.log('Received request to create order');
+    this.logger.log('Received request to create order'); // Log này phải xuất hiện
     return this.ordersService.createOrder(createOrderDto);
   }
 

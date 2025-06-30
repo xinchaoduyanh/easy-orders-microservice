@@ -5,12 +5,12 @@ import {
   NotFoundException,
   Inject,
   OnModuleInit,
+  BadRequestException,
 } from '@nestjs/common';
 import { ClientKafka } from '@nestjs/microservices';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto, UpdateOrderStatusDto } from './orders.dto'; // Import DTOs từ file orders.dto.ts
 import { Order, OrderStatus } from '@prisma/client';
-import { CreateOrderItemDto } from './orders.dto'; // Import CreateOrderItemDto from orders.dto.ts
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
@@ -29,12 +29,36 @@ export class OrdersService implements OnModuleInit {
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
     try {
-      // Tính tổng tiền đơn hàng từ các order items
-      const totalAmount = createOrderDto.orderItems.reduce(
-        (sum: number, item: CreateOrderItemDto) =>
-          sum + item.quantity * item.price,
-        0,
-      );
+      let totalAmount: number = 0;
+      const orderItemsToCreate: {
+        productId: string;
+        quantity: number;
+        price: number;
+      }[] = [];
+
+      // Lặp qua các item trong đơn hàng để tra cứu giá từ DB
+      for (const itemDto of createOrderDto.orderItems) {
+        const product = await this.prisma.product.findUnique({
+          where: { id: itemDto.productId },
+        });
+
+        if (!product) {
+          throw new NotFoundException(
+            `Product with ID ${itemDto.productId} not found.`,
+          );
+        }
+
+        // Sử dụng giá từ DB, không phải từ DTO
+        const itemPrice = product.price.toNumber(); // Chuyển Decimal từ Prisma sang number
+        const itemTotal = itemPrice * itemDto.quantity;
+        totalAmount += itemTotal;
+
+        orderItemsToCreate.push({
+          productId: itemDto.productId,
+          quantity: itemDto.quantity,
+          price: itemPrice, // Lấy giá từ DB
+        });
+      }
 
       const order = await this.prisma.order.create({
         data: {
@@ -42,11 +66,7 @@ export class OrdersService implements OnModuleInit {
           totalAmount: totalAmount,
           status: OrderStatus.CREATED, // Trạng thái mặc định khi tạo
           orderItems: {
-            create: createOrderDto.orderItems.map((item) => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              price: item.price,
-            })),
+            create: orderItemsToCreate,
           },
         },
         include: {
@@ -71,7 +91,13 @@ export class OrdersService implements OnModuleInit {
         `Failed to create order: ${error.message}`,
         error.stack,
       );
-      throw error;
+      // Ném lỗi cụ thể hơn nếu cần, ví dụ BadRequestException cho lỗi nghiệp vụ
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException(
+        'Failed to create order due to an internal error.',
+      );
     }
   }
 
@@ -106,7 +132,7 @@ export class OrdersService implements OnModuleInit {
         existingOrder.status === OrderStatus.DELIVERED &&
         updateOrderStatusDto.status !== OrderStatus.DELIVERED
       ) {
-        throw new Error(
+        throw new BadRequestException(
           `Cannot change status from DELIVERED to ${updateOrderStatusDto.status}`,
         );
       }
@@ -123,7 +149,16 @@ export class OrdersService implements OnModuleInit {
         `Failed to update status for order ${id}: ${error.message}`,
         error.stack,
       );
-      throw error;
+      // Ném lỗi cụ thể hơn nếu cần
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException(
+        'Failed to update order status due to an internal error.',
+      );
     }
   }
 
@@ -146,7 +181,7 @@ export class OrdersService implements OnModuleInit {
       }
       // Ví dụ: Không cho phép hủy đơn hàng đã DELIVERED
       if (existingOrder.status === OrderStatus.DELIVERED) {
-        throw new Error(`Cannot cancel a DELIVERED order.`);
+        throw new BadRequestException(`Cannot cancel a DELIVERED order.`);
       }
 
       const order = await this.prisma.order.update({
@@ -160,7 +195,15 @@ export class OrdersService implements OnModuleInit {
         `Failed to cancel order ${id}: ${error.message}`,
         error.stack,
       );
-      throw error;
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException(
+        'Failed to cancel order due to an internal error.',
+      );
     }
   }
 }
