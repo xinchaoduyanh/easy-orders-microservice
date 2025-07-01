@@ -9,7 +9,7 @@ datasource db {
 
 model Order {
   id          String      @id @default(uuid()) @map("_id")
-  userId      String
+  userEmail   String
   totalAmount Decimal     @db.Decimal(10, 2)
   status      OrderStatus @default(CREATED)
   createdAt   DateTime    @default(now())

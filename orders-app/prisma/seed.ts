@@ -4,6 +4,10 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
+  // Xóa dữ liệu cũ
+  await prisma.orderItem.deleteMany({});
+  await prisma.order.deleteMany({});
+
   console.log('Start seeding products...');
 
   const products = [

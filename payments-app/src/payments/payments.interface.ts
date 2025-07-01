@@ -4,7 +4,7 @@
 export interface ProcessPaymentPayload {
   orderId: string;
   amount: number;
-  userId: string; // Or any other mocked authentication information
+  userEmail: string; // Or any other mocked authentication information
 }
 
 // Interface for payment result payload sent back to Orders App

@@ -21,7 +21,7 @@ export type OrderItemForDbCreation = {
 
 // Schema và Type cho việc tạo Order
 export const CreateOrderZodSchema = z.object({
-  userId: z.string().min(1, { message: 'User ID is required' }),
+  userEmail: z.string().email({ message: 'User email is required' }),
   orderItems: z
     .array(CreateOrderItemZodSchema)
     .min(1, { message: 'Order must contain at least one item' }),

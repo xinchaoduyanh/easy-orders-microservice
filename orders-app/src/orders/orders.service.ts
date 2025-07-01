@@ -78,7 +78,7 @@ export class OrdersService implements OnModuleInit {
 
       const order = await this.prisma.order.create({
         data: {
-          userId: createOrderDto.userId,
+          userEmail: createOrderDto.userEmail,
           totalAmount: totalAmount,
           status: OrderStatus.CREATED,
           orderItems: {
@@ -96,7 +96,7 @@ export class OrdersService implements OnModuleInit {
       this.clientKafka.emit('order_events', {
         orderId: order.id,
         amount: order.totalAmount,
-        userId: order.userId,
+        userEmail: createOrderDto.userEmail,
       });
       this.logger.log(`Payment request for order ${order.id} sent to Kafka.`);
 
@@ -176,21 +176,22 @@ export class OrdersService implements OnModuleInit {
                 currentOrder &&
                 currentOrder.status === OrderStatus.CONFIRMED
               ) {
-                await this.prisma.order.update({
+                const deliveredOrder = await this.prisma.order.update({
                   where: { id },
                   data: { status: OrderStatus.DELIVERED },
                 });
                 this.logger.log(
-                  `Order ${updatedOrder.id} automatically moved to DELIVERED state.`,
+                  `Order ${deliveredOrder.id} automatically moved to DELIVERED state.`,
                 );
+                await this.notifyOrderDelivered(deliveredOrder);
               } else if (currentOrder) {
                 this.logger.warn(
-                  `Order ${updatedOrder.id} status changed from CONFIRMED before auto-delivery. Current status: ${currentOrder.status}`,
+                  `Order ${id} status changed from CONFIRMED before auto-delivery. Current status: ${currentOrder.status}`,
                 );
               }
             } catch (timeoutError) {
               this.logger.error(
-                `Failed to auto-deliver order ${updatedOrder.id}: ${timeoutError.message}`,
+                `Failed to auto-deliver order ${id}: ${timeoutError.message}`,
                 timeoutError.stack,
               );
             }
@@ -258,5 +259,36 @@ export class OrdersService implements OnModuleInit {
         'Failed to cancel order due to an internal error.',
       );
     }
+  }
+
+  async notifyOrderDelivered(order: Order) {
+    // Fetch order with items
+    const fullOrder = await this.prisma.order.findUnique({
+      where: { id: order.id },
+      include: { orderItems: true },
+    });
+
+    if (!fullOrder) {
+      this.logger.error(`Order with ID ${order.id} not found.`);
+      return;
+    }
+
+    const message = {
+      orderId: fullOrder.id,
+      userEmail: fullOrder.userEmail,
+      userName: 'John Doe', // TODO: Get user name from user service
+      orderDetails: {
+        products: fullOrder.orderItems,
+        total: fullOrder.totalAmount,
+      },
+      deliveredAt: new Date().toISOString(),
+    };
+
+    this.clientKafka.emit('order-delivered', {
+      value: JSON.stringify(message),
+    });
+    this.logger.log(
+      `[ORDER] Đã gửi thông báo giao hàng tới Notifications App cho orderId=${fullOrder.id}, userEmail=${fullOrder.userEmail}`,
+    );
   }
 }
