@@ -58,7 +58,6 @@ Hệ thống này đã giải quyết đầy đủ các yêu cầu trên, với 
 - **Thông báo email:** Khi DELIVERED, hệ thống tự động gửi email qua notifications-app (Resend).
 - **Realtime dashboard:** Frontend luôn cập nhật trạng thái mới nhất, UX hiện đại.
 - **Dễ mở rộng:** Có thể thêm các loại notification khác, thêm các trạng thái, tích hợp các hệ thống thanh toán thực tế.
-- **Đồng nhất userEmail:** Toàn bộ hệ thống chỉ dùng userEmail, không còn userId, tránh nhầm lẫn.
 - **Xóa dữ liệu orders khi seed lại:** Phù hợp cho dev/test, không bị lỗi dữ liệu cũ.
 
 ---
@@ -66,7 +65,7 @@ Hệ thống này đã giải quyết đầy đủ các yêu cầu trên, với 
 ## 5. Công nghệ sử dụng
 
 - **NestJS** (NodeJS, Typescript)
-- **React** (SPA, TailwindCSS)
+- **Next.js 15** (App Router, React, TailwindCSS)
 - **Prisma ORM** (PostgreSQL)
 - **Kafka** (Pub/Sub)
 - **Resend** (Email API)
