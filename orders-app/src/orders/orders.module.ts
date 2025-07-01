@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { OrderEventsConsumer } from './order-events.consumer';
+import { ProductsController } from './products.controller';
 // Không cần ClientsModule ở đây nữa, ClientsModule sẽ được cấu hình trực tiếp trong service
 // import { ClientsModule, Transport } from '@nestjs/microservices';
 
@@ -12,6 +13,6 @@ import { OrderEventsConsumer } from './order-events.consumer';
     // Client Kafka (producer) sẽ được khởi tạo thủ công trong OrdersService.
   ],
   providers: [OrdersService],
-  controllers: [OrdersController, OrderEventsConsumer], // Đưa OrderEventsConsumer vào controllers
+  controllers: [OrdersController, OrderEventsConsumer, ProductsController], // Đăng ký controller
 })
 export class OrdersModule {}
