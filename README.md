@@ -16,7 +16,7 @@ Hệ thống này đã giải quyết đầy đủ các yêu cầu trên, với 
 ## 2. Kiến trúc tổng thể & các service
 
 - **orders-app**: Quản lý đơn hàng, trạng thái, tự động chuyển trạng thái, giao tiếp với các service khác qua Kafka.
-- **payments-app**: Xử lý thanh toán, nhận yêu cầu từ orders-app, trả về kết quả random (confirmed/declined) qua Kafka.
+- **payments-app**: Xử lý thanh toán, nhận yêu cầu từ orders-app, trả về kết quả (confirmed/declined) qua Kafka.
 - **notifications-app**: Lắng nghe Kafka, gửi email thông báo khi đơn hàng được giao thành công (DELIVERED) qua Resend.
 - **fe/**: Frontend React, dashboard realtime, tạo/hủy đơn hàng, xem chi tiết, trạng thái, timeline, v.v.
 - **Kafka**: Pub/Sub cho các service.
@@ -31,14 +31,14 @@ Hệ thống này đã giải quyết đầy đủ các yêu cầu trên, với 
 1. **User** tạo đơn hàng trên frontend (fe/), nhập thông tin sản phẩm, email.
 2. **orders-app** nhận request, tạo đơn hàng ở trạng thái `CREATED` trong DB.
 3. **orders-app** gửi message Kafka (topic `order_events`) yêu cầu thanh toán sang **payments-app**.
-4. **payments-app** nhận message, xử lý mock (random confirmed/declined), gửi kết quả về lại Kafka.
+4. **payments-app** nhận message, xử lý mock ( confirmed/declined) dựa trên tổng tiền có đơn hàng, gửi kết quả về lại Kafka.
 5. **orders-app** nhận kết quả thanh toán:
    - Nếu `declined` → cập nhật trạng thái đơn hàng thành `CANCELLED`.
-   - Nếu `confirmed` → cập nhật trạng thái đơn hàng thành `CONFIRMED`, đồng thời lên lịch tự động chuyển sang `DELIVERED` sau X giây.
+   - Nếu `confirmed` → cập nhật trạng thái đơn hàng thành `CONFIRMED`, đồng thời lên lịch tự động chuyển sang `DELIVERED` sau 15 giây.
 
 ### **B. Luồng giao hàng & gửi email thông báo**
 
-6. Khi đơn hàng chuyển sang `DELIVERED` (tự động sau X giây):
+6. Khi đơn hàng chuyển sang `DELIVERED` (tự động sau 15 giây):
    - **orders-app** gửi message Kafka (topic `order-delivered`) sang **notifications-app** với thông tin đơn hàng và email khách hàng.
 7. **notifications-app** lắng nghe topic này, nhận message, gửi email xác nhận giao hàng thành công qua Resend API.
 
