@@ -14,7 +14,7 @@ export default function Navigation() {
 
   const navItems = [
     { href: "/products", label: "Sản phẩm", icon: Package },
-    { href: "/cart", label: "Giỏ hàng", icon: ShoppingCart, badge: totalItems },
+    { href: "/cart", label: "Giỏ hàng vui vẻ", icon: ShoppingCart, badge: totalItems },
     { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
   ]
 

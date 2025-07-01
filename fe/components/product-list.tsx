@@ -57,8 +57,18 @@ export default function ProductList() {
       {products.map((product) => (
         <Card key={product.id} className="flex flex-col">
           <CardHeader>
+            {product.imageUrl && (
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                className="w-full h-40 object-cover rounded-md mb-2"
+              />
+            )}
             <CardTitle className="text-lg">{product.name}</CardTitle>
             <div className="text-sm text-muted-foreground">ID: {product.id}</div>
+            {product.description && (
+              <div className="text-sm text-gray-500 mt-1">{product.description}</div>
+            )}
           </CardHeader>
           <CardContent className="flex-1">
             <div className="text-2xl font-bold text-primary">

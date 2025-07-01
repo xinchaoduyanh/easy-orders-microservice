@@ -43,7 +43,7 @@ export class PaymentsService implements OnModuleInit {
     );
 
     await new Promise((resolve) =>
-      setTimeout(resolve, Math.random() * 2000 + 500),
+      setTimeout(resolve, Math.random() * 1000 + 500),
     );
 
     let status: 'confirmed' | 'declined';
