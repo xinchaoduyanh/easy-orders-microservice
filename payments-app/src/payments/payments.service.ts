@@ -1,6 +1,12 @@
 // payments-app/src/payments/payments.service.ts
-import { Injectable, Logger, Inject, OnModuleInit } from '@nestjs/common';
-import { ClientKafka } from '@nestjs/microservices';
+import {
+  Injectable,
+  Logger, // Inject, // Không cần Inject ClientKafka nữa
+  OnModuleInit,
+} from '@nestjs/common';
+import { ClientKafka } from '@nestjs/microservices'; // Remove Transport import
+import { ConfigService } from '@nestjs/config'; // Import ConfigService
+import { firstValueFrom } from 'rxjs';
 import {
   ProcessPaymentPayload,
   PaymentResultPayload,
@@ -9,16 +15,26 @@ import {
 @Injectable()
 export class PaymentsService implements OnModuleInit {
   private readonly logger = new Logger(PaymentsService.name);
+  private clientKafka: ClientKafka; // Khai báo clientKafka là một thuộc tính của class
 
   constructor(
-    // Inject Kafka Client to send results back to Order App
-    @Inject('ORDER_SERVICE_KAFKA') private readonly clientKafka: ClientKafka,
-  ) {}
+    private readonly configService: ConfigService, // Inject ConfigService
+  ) {
+    // Khởi tạo ClientKafka trực tiếp
+    this.clientKafka = new ClientKafka({
+      client: {
+        clientId: 'payments-app-order-producer',
+        brokers: [
+          this.configService.get<string>('KAFKA_BROKER') || 'localhost:9092',
+        ],
+      },
+      // Add any other needed Kafka options here
+    });
+  }
 
   async onModuleInit() {
-    // Connect to the Kafka broker when the module initializes
-    await this.clientKafka.connect();
-    this.logger.log('Connected to Kafka for ORDER_SERVICE_KAFKA client.');
+    await this.clientKafka.connect(); // Kết nối tới Kafka broker
+    this.logger.log('PaymentsService Kafka producer connected.');
   }
 
   async processPayment(payload: ProcessPaymentPayload): Promise<void> {
@@ -26,29 +42,45 @@ export class PaymentsService implements OnModuleInit {
       `Received payment request for Order ID: ${payload.orderId}, Amount: ${payload.amount}`,
     );
 
-    // Simulate a small delay to mimic payment processing
     await new Promise((resolve) =>
       setTimeout(resolve, Math.random() * 2000 + 500),
-    ); // 0.5s - 2.5s delay
+    );
 
-    // Mocked payment logic: return either 'confirmed' or 'declined' randomly
-    const isConfirmed = Math.random() > 0.5; // 50% confirmed, 50% declined
-    const status: 'confirmed' | 'declined' = isConfirmed
-      ? 'confirmed'
-      : 'declined';
+    let status: 'confirmed' | 'declined';
+    if (payload.amount > 5000) {
+      status = 'declined';
+      this.logger.warn(
+        `Insufficient funds to process order ${payload.orderId}. Declined.`,
+      );
+    } else {
+      status = 'confirmed';
+      this.logger.log(`Payment for order ${payload.orderId} confirmed.`);
+    }
 
     const paymentResult: PaymentResultPayload = {
       orderId: payload.orderId,
       status: status,
     };
 
-    // Send payment result back to Orders App via Kafka topic 'payment_results'
-    this.clientKafka.emit(
-      'payment_results', // Topic
-      paymentResult,
-    );
     this.logger.log(
-      `Payment for order ${payload.orderId} resulted in: ${status}. Result sent to Kafka.`,
+      `Preparing to send payment result: ${JSON.stringify(paymentResult)}`,
     );
+
+    // Send payment result back to Orders App via Kafka topic 'payment_results'
+    try {
+      await firstValueFrom(
+        this.clientKafka.emit('payment_results', paymentResult),
+      );
+      this.logger.log(
+        `Payment for order ${payload.orderId} resulted in: ${status}. Result sent back to Orders App via Kafka.`,
+      );
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      const errorStack = err instanceof Error ? err.stack : undefined;
+      this.logger.error(
+        `Failed to emit payment result for order ${payload.orderId}: ${errorMessage}`,
+        errorStack,
+      );
+    }
   }
 }

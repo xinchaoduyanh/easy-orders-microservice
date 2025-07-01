@@ -3,40 +3,57 @@ import {
   Injectable,
   Logger,
   NotFoundException,
-  Inject,
+  // Inject, // Không cần Inject ClientKafka nữa
   OnModuleInit,
   BadRequestException,
 } from '@nestjs/common';
-import { ClientKafka } from '@nestjs/microservices';
+import { ClientKafka } from '@nestjs/microservices'; // Remove Transport import
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateOrderDto, UpdateOrderStatusDto } from './orders.dto'; // Import DTOs từ file orders.dto.ts
+import { ConfigService } from '@nestjs/config'; // Import ConfigService
+import {
+  CreateOrderDto,
+  // CreateOrderItemDto, // Remove unused import
+  UpdateOrderStatusDto,
+  OrderItemForDbCreation,
+} from './orders.dto';
 import { Order, OrderStatus } from '@prisma/client';
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
   private readonly logger = new Logger(OrdersService.name);
+  private readonly DELIVERY_DELAY_MS = 20 * 1000; // 20 giây delay cho việc giao hàng (có thể cấu hình)
+  private clientKafka: ClientKafka; // Khai báo clientKafka là một thuộc tính của class
 
   constructor(
     private readonly prisma: PrismaService,
-    @Inject('PAYMENT_SERVICE_KAFKA') private readonly clientKafka: ClientKafka, // Inject Kafka Client
-  ) {}
-
-  // Khi module khởi tạo, kết nối Kafka và đăng ký lắng nghe response
-  async onModuleInit() {
-    this.clientKafka.subscribeToResponseOf('payment_results'); // Lắng nghe kết quả thanh toán từ Kafka
-    await this.clientKafka.connect(); // Kết nối tới Kafka broker
+    private readonly configService: ConfigService, // Inject ConfigService
+  ) {
+    // Khởi tạo ClientKafka trực tiếp
+    this.clientKafka = new ClientKafka({
+      client: {
+        clientId: 'orders-app-payment-producer', // ClientId rõ ràng cho producer
+        brokers: [
+          this.configService.get<string>('KAFKA_BROKER') || 'localhost:9092',
+        ],
+      },
+      // Add any other needed Kafka options here
+    });
   }
+
+  async onModuleInit() {
+    // Không cần subscribeToResponseOf ở đây
+    await this.clientKafka.connect(); // Kết nối tới Kafka broker
+    this.logger.log('OrdersService Kafka producer connected.');
+  }
+
+  // ... (các phương thức khác như createOrder, getOrderById, updateOrderStatus, getAllOrders, cancelOrder)
+  // Logic bên trong các phương thức này không thay đổi, chỉ cách clientKafka được inject/khởi tạo thay đổi.
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
     try {
       let totalAmount: number = 0;
-      const orderItemsToCreate: {
-        productId: string;
-        quantity: number;
-        price: number;
-      }[] = [];
+      const orderItemsToCreate: OrderItemForDbCreation[] = [];
 
-      // Lặp qua các item trong đơn hàng để tra cứu giá từ DB
       for (const itemDto of createOrderDto.orderItems) {
         const product = await this.prisma.product.findUnique({
           where: { id: itemDto.productId },
@@ -48,15 +65,14 @@ export class OrdersService implements OnModuleInit {
           );
         }
 
-        // Sử dụng giá từ DB, không phải từ DTO
-        const itemPrice = product.price.toNumber(); // Chuyển Decimal từ Prisma sang number
+        const itemPrice = product.price.toNumber();
         const itemTotal = itemPrice * itemDto.quantity;
         totalAmount += itemTotal;
 
         orderItemsToCreate.push({
           productId: itemDto.productId,
           quantity: itemDto.quantity,
-          price: itemPrice, // Lấy giá từ DB
+          price: itemPrice,
         });
       }
 
@@ -64,24 +80,23 @@ export class OrdersService implements OnModuleInit {
         data: {
           userId: createOrderDto.userId,
           totalAmount: totalAmount,
-          status: OrderStatus.CREATED, // Trạng thái mặc định khi tạo
+          status: OrderStatus.CREATED,
           orderItems: {
             create: orderItemsToCreate,
           },
         },
         include: {
-          orderItems: true, // Bao gồm orderItems trong kết quả trả về
+          orderItems: true,
         },
       });
 
       this.logger.log(`Order ${order.id} created.`);
 
       // Gửi sự kiện yêu cầu thanh toán tới Kafka topic 'order_events'
-      // Payload bao gồm orderId và thông tin cần thiết cho Payment App
       this.clientKafka.emit('order_events', {
         orderId: order.id,
         amount: order.totalAmount,
-        userId: order.userId, // Hoặc bất kỳ thông tin xác thực giả lập nào khác
+        userId: order.userId,
       });
       this.logger.log(`Payment request for order ${order.id} sent to Kafka.`);
 
@@ -91,7 +106,6 @@ export class OrdersService implements OnModuleInit {
         `Failed to create order: ${error.message}`,
         error.stack,
       );
-      // Ném lỗi cụ thể hơn nếu cần, ví dụ BadRequestException cho lỗi nghiệp vụ
       if (error instanceof NotFoundException) {
         throw error;
       }
@@ -118,7 +132,6 @@ export class OrdersService implements OnModuleInit {
     updateOrderStatusDto: UpdateOrderStatusDto,
   ): Promise<Order> {
     try {
-      // Kiểm tra xem đơn hàng có tồn tại không
       const existingOrder = await this.prisma.order.findUnique({
         where: { id },
       });
@@ -126,8 +139,6 @@ export class OrdersService implements OnModuleInit {
         throw new NotFoundException(`Order with ID ${id} not found.`);
       }
 
-      // Logic chuyển đổi trạng thái (có thể được cải thiện bằng State Machine sau)
-      // Ví dụ: Không cho phép chuyển từ DELIVERED trở lại các trạng thái khác
       if (
         existingOrder.status === OrderStatus.DELIVERED &&
         updateOrderStatusDto.status !== OrderStatus.DELIVERED
@@ -136,20 +147,63 @@ export class OrdersService implements OnModuleInit {
           `Cannot change status from DELIVERED to ${updateOrderStatusDto.status}`,
         );
       }
+      if (existingOrder.status === OrderStatus.CANCELLED) {
+        throw new BadRequestException(
+          `Cannot change status for a CANCELLED order.`,
+        );
+      }
 
-      const order = await this.prisma.order.update({
+      const updatedOrder = await this.prisma.order.update({
         where: { id },
         data: { status: updateOrderStatusDto.status },
         include: { orderItems: true },
       });
-      this.logger.log(`Order ${order.id} status updated to ${order.status}`);
-      return order;
+      this.logger.log(
+        `Order ${updatedOrder.id} status updated to ${updatedOrder.status}`,
+      );
+
+      if (updatedOrder.status === OrderStatus.CONFIRMED) {
+        this.logger.log(
+          `Order ${updatedOrder.id} is CONFIRMED. Scheduling auto-delivery in ${this.DELIVERY_DELAY_MS / 1000} seconds.`,
+        );
+        setTimeout(() => {
+          void (async () => {
+            try {
+              const currentOrder = await this.prisma.order.findUnique({
+                where: { id },
+              });
+              if (
+                currentOrder &&
+                currentOrder.status === OrderStatus.CONFIRMED
+              ) {
+                await this.prisma.order.update({
+                  where: { id },
+                  data: { status: OrderStatus.DELIVERED },
+                });
+                this.logger.log(
+                  `Order ${updatedOrder.id} automatically moved to DELIVERED state.`,
+                );
+              } else if (currentOrder) {
+                this.logger.warn(
+                  `Order ${updatedOrder.id} status changed from CONFIRMED before auto-delivery. Current status: ${currentOrder.status}`,
+                );
+              }
+            } catch (timeoutError) {
+              this.logger.error(
+                `Failed to auto-deliver order ${updatedOrder.id}: ${timeoutError.message}`,
+                timeoutError.stack,
+              );
+            }
+          })();
+        }, this.DELIVERY_DELAY_MS);
+      }
+
+      return updatedOrder;
     } catch (error) {
       this.logger.error(
         `Failed to update status for order ${id}: ${error.message}`,
         error.stack,
       );
-      // Ném lỗi cụ thể hơn nếu cần
       if (
         error instanceof NotFoundException ||
         error instanceof BadRequestException
@@ -179,7 +233,6 @@ export class OrdersService implements OnModuleInit {
       if (!existingOrder) {
         throw new NotFoundException(`Order with ID ${id} not found.`);
       }
-      // Ví dụ: Không cho phép hủy đơn hàng đã DELIVERED
       if (existingOrder.status === OrderStatus.DELIVERED) {
         throw new BadRequestException(`Cannot cancel a DELIVERED order.`);
       }

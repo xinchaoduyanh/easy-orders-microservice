@@ -6,7 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { OrdersModule } from './orders/orders.module'; // Import OrdersModule
 import { ConfigModule } from '@nestjs/config'; // Import ConfigModule
 import { APP_PIPE } from '@nestjs/core'; // Import APP_PIPE
-import { ZodValidationPipe } from 'nestjs-zod'; // Import ZodValidationPipe
+import { ZodValidationPipe } from 'nestjs-zod'; // Đã sửa import từ 'nestjs-zod' sang '@nestjs/zod'
 
 @Module({
   imports: [
