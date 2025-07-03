@@ -12,17 +12,6 @@ import { ZodSerializerInterceptor } from 'nestjs-zod';
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true }), PaymentsModule],
   controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_PIPE,
-      useClass: CustomZodValidationPipe,
-    },
-    { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}
