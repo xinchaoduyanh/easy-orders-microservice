@@ -2,9 +2,6 @@
 import { z } from 'zod';
 import { OrderStatus } from '@prisma/client';
 
-// Import PaymentResultPayload từ payments.interface.ts thay vì định nghĩa lại ở đây
-
-// Schema và Type cho việc tạo OrderItem (từ request client)
 export const CreateOrderItemZodSchema = z
   .object({
     productId: z.string().min(1, { message: 'Product ID is required' }),
@@ -48,3 +45,15 @@ export type UpdateOrderStatusDto = z.infer<typeof UpdateOrderStatusZodSchema>;
 
 // PaymentResultPayload đã được di chuyển sang payments-app/src/payments/payments.interface.ts
 // và sẽ được import trực tiếp vào order-events.consumer.ts
+
+export interface PaymentResultPayload {
+  orderId: string;
+  status: 'confirmed' | 'declined';
+}
+
+export interface InventoryInsufficientPayload {
+  orderId: string;
+  productId: string;
+  requestedQuantity: number;
+  availableStock: number;
+}

@@ -1,53 +1,36 @@
-// orders-app/src/orders/orders.service.ts
 import {
   Injectable,
   Logger,
   NotFoundException,
-  // Inject, // Không cần Inject ClientKafka nữa
   OnModuleInit,
   BadRequestException,
+  Inject,
 } from '@nestjs/common';
-import { ClientKafka } from '@nestjs/microservices'; // Remove Transport import
+import { ClientKafka } from '@nestjs/microservices';
 import { PrismaService } from '../prisma/prisma.service';
-import { ConfigService } from '@nestjs/config'; // Import ConfigService
 import {
   CreateOrderDto,
-  // CreateOrderItemDto, // Remove unused import
   UpdateOrderStatusDto,
   OrderItemForDbCreation,
 } from './orders.dto';
 import { Order, OrderStatus } from '@prisma/client';
+import { OrderDeliveredNotification } from 'microservice-shared';
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
   private readonly logger = new Logger(OrdersService.name);
   private readonly DELIVERY_DELAY_MS = 20 * 1000; // 20 giây delay cho việc giao hàng (có thể cấu hình)
-  private clientKafka: ClientKafka; // Khai báo clientKafka là một thuộc tính của class
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly configService: ConfigService, // Inject ConfigService
-  ) {
-    // Khởi tạo ClientKafka trực tiếp
-    this.clientKafka = new ClientKafka({
-      client: {
-        clientId: 'orders-app-payment-producer', // ClientId rõ ràng cho producer
-        brokers: [
-          this.configService.get<string>('KAFKA_BROKER') || 'localhost:9092',
-        ],
-      },
-      // Add any other needed Kafka options here
-    });
-  }
+    @Inject('KAFKA_ORDER_SERVICE') private readonly kafkaClient: ClientKafka,
+  ) {}
 
   async onModuleInit() {
-    // Không cần subscribeToResponseOf ở đây
-    await this.clientKafka.connect(); // Kết nối tới Kafka broker
+    this.kafkaClient.subscribeToResponseOf('payment_results');
+    await this.kafkaClient.connect();
     this.logger.log('OrdersService Kafka producer connected.');
   }
-
-  // ... (các phương thức khác như createOrder, getOrderById, updateOrderStatus, getAllOrders, cancelOrder)
-  // Logic bên trong các phương thức này không thay đổi, chỉ cách clientKafka được inject/khởi tạo thay đổi.
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
     try {
@@ -92,8 +75,7 @@ export class OrdersService implements OnModuleInit {
 
       this.logger.log(`Order ${order.id} created.`);
 
-      // Gửi sự kiện yêu cầu thanh toán tới Kafka topic 'order_events'
-      this.clientKafka.emit('order_events', {
+      this.kafkaClient.emit('order_events', {
         orderId: order.id,
         amount: order.totalAmount,
         userEmail: createOrderDto.userEmail,
@@ -273,22 +255,30 @@ export class OrdersService implements OnModuleInit {
       return;
     }
 
-    const message = {
+    const message: OrderDeliveredNotification = {
       orderId: fullOrder.id,
       userEmail: fullOrder.userEmail,
-      userName: 'John Doe', // TODO: Get user name from user service
+      userName: fullOrder.userEmail,
       orderDetails: {
-        products: fullOrder.orderItems,
-        total: fullOrder.totalAmount,
+        products: fullOrder.orderItems.map((item) => ({
+          id: item.id,
+          orderId: item.orderId,
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.price.toNumber(),
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+        })),
+        total: fullOrder.totalAmount.toNumber(),
       },
       deliveredAt: new Date().toISOString(),
     };
-
-    this.clientKafka.emit('order-delivered', {
-      value: JSON.stringify(message),
+    this.logger.log(message.orderDetails);
+    this.kafkaClient.emit('order-delivered', {
+      value: message,
     });
     this.logger.log(
-      `[ORDER] Đã gửi thông báo giao hàng tới Notifications App cho orderId=${fullOrder.id}, userEmail=${fullOrder.userEmail}`,
+      `[ORDER] Đã gửi thông báo giao hàng tới Notifications App cho orderId=${fullOrder.id}, userEmail=${fullOrder.userEmail}, `,
     );
   }
 }

@@ -154,7 +154,7 @@ export default function OrderDashboard() {
               {filteredOrders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>{order.userId}</TableCell>
+                  <TableCell>{order.userEmail}</TableCell>
                   <TableCell>${Number(order.totalAmount).toFixed(2)}</TableCell>
                   <TableCell>
                     <Badge className={statusColors[order.status]}>

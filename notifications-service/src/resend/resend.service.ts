@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { OrderDeliveredNotification } from 'microservice-shared/index';
 import { Resend } from 'resend';
 
 @Injectable()
@@ -9,14 +10,15 @@ export class ResendService {
     this.resend = new Resend(process.env.RESEND_API_KEY);
   }
 
-  async sendOrderDeliveredEmail(data: any) {
+  async sendOrderDeliveredEmail(data: OrderDeliveredNotification) {
     const userEmail = data.userEmail;
-    const { userName, orderId, orderDetails } = data;
+    const { orderId, orderDetails } = data;
     const productsList = orderDetails.products
       .map((p) => `<li>${p.name} x${p.quantity} - $${p.price}</li>`)
       .join('');
+    console.log(productsList);
     const html = `
-      <h2>Xin chào ${userName},</h2>
+      <h2>Xin chào ${userEmail},</h2>
       <p>Đơn hàng <b>#${orderId}</b> của bạn đã được giao thành công!</p>
       <ul>${productsList}</ul>
       <p>Tổng tiền: <b>$${orderDetails.total}</b></p>

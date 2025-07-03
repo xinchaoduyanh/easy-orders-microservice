@@ -1,30 +1,35 @@
 // orders-app/src/orders/order-events.consumer.ts
-import { Controller, Logger } from '@nestjs/common';
+import { Controller, Logger, Inject, OnModuleInit } from '@nestjs/common';
 import {
   EventPattern,
   // Ctx,
   // KafkaContext, // Không dùng, có thể comment out hoặc xóa
   Payload,
+  ClientKafka,
 } from '@nestjs/microservices';
 import { OrdersService } from './orders.service';
 import { OrderStatus } from '@prisma/client';
-// Import PaymentResultPayload từ payments-app
+import { PaymentResultPayload } from './orders.dto';
 
-interface PaymentResultPayload {
-  orderId: string;
-  status: 'confirmed' | 'declined';
-}
-@Controller() // Controller này sẽ hoạt động như một Kafka consumer
-export class OrderEventsConsumer {
+@Controller()
+export class OrderEventsConsumer implements OnModuleInit {
   private readonly logger = new Logger(OrderEventsConsumer.name);
 
-  constructor(private readonly ordersService: OrdersService) {
+  constructor(
+    private readonly ordersService: OrdersService,
+    @Inject('KAFKA_ORDER_SERVICE') private readonly kafkaClient: ClientKafka,
+  ) {
     this.logger.log(
-      'OrderEventsConsumer initialized and listening for payment_results topic',
+      'OrderEventsConsumer initialized and listening for payment_results and inventory topics',
     );
     this.logger.log(
       `Process PID: ${process.pid}, ENV: ${process.env.NODE_ENV}`,
     );
+  }
+
+  async onModuleInit() {
+    this.kafkaClient.subscribeToResponseOf('payment_results');
+    await this.kafkaClient.connect();
   }
 
   @EventPattern('payment_results') // Lắng nghe topic 'payment_results' từ Kafka

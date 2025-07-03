@@ -8,31 +8,13 @@ import { useToast } from '@/hooks/use-toast';
 import { getProducts } from '@/lib/api';
 import type { Product } from '@/lib/types';
 import { ShoppingCart } from 'lucide-react';
+import { useProduct } from '@/queries';
 
 export default function ProductList() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const data = await getProducts();
-        setProducts(data);
-      } catch (error) {
-        toast({
-          title: 'Lỗi',
-          description: 'Không thể tải danh sách sản phẩm',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [toast]);
+  const { data: products, isLoading, isError } = useProduct();
 
   const handleAddToCart = (product: Product) => {
     addToCart({
@@ -48,13 +30,17 @@ export default function ProductList() {
     });
   };
 
-  if (loading) {
+  if (isLoading) {
     return <div>Đang tải...</div>;
+  }
+
+  if (isError) {
+    return <div>Lỗi khi tải sản phẩm.</div>;
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {products.map((product) => (
+      {products?.map((product: Product) => (
         <Card key={product.id} className="flex flex-col">
           <CardHeader>
             {product.imageUrl && (

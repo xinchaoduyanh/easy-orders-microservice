@@ -10,6 +10,7 @@ import { HttpExceptionFilter } from 'src/shared/filter/http_exception.filter';
 import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe';
 import { ZodSerializerInterceptor } from 'nestjs-zod';
 import { ProductsModule } from './products/products.module';
+import { KafkaModule } from 'microservice-shared';
 
 @Module({
   imports: [
@@ -17,8 +18,9 @@ import { ProductsModule } from './products/products.module';
     PrismaModule,
     OrdersModule,
     ProductsModule,
+    KafkaModule.register(['order']),
   ],
-  controllers: [AppController, ProductsModule],
+  controllers: [AppController],
   providers: [
     AppService,
     {

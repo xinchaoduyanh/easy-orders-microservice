@@ -1,39 +1,22 @@
 // payments-app/src/payments/payments.service.ts
-import {
-  Injectable,
-  Logger, // Inject, // Không cần Inject ClientKafka nữa
-  OnModuleInit,
-} from '@nestjs/common';
-import { ClientKafka } from '@nestjs/microservices'; // Remove Transport import
-import { ConfigService } from '@nestjs/config'; // Import ConfigService
+import { Injectable, Logger, Inject, OnModuleInit } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import {
   ProcessPaymentPayload,
   PaymentResultPayload,
-} from './payments.interface'; // Import interfaces
+} from './payments.interface';
 
 @Injectable()
 export class PaymentsService implements OnModuleInit {
   private readonly logger = new Logger(PaymentsService.name);
-  private clientKafka: ClientKafka; // Khai báo clientKafka là một thuộc tính của class
 
   constructor(
-    private readonly configService: ConfigService, // Inject ConfigService
-  ) {
-    // Khởi tạo ClientKafka trực tiếp
-    this.clientKafka = new ClientKafka({
-      client: {
-        clientId: 'payments-app-order-producer',
-        brokers: [
-          this.configService.get<string>('KAFKA_BROKER') || 'localhost:9092',
-        ],
-      },
-      // Add any other needed Kafka options here
-    });
-  }
+    @Inject('KAFKA_PAYMENT_SERVICE') private readonly kafkaClient: ClientProxy,
+  ) {}
 
   async onModuleInit() {
-    await this.clientKafka.connect(); // Kết nối tới Kafka broker
+    await this.kafkaClient.connect();
     this.logger.log('PaymentsService Kafka producer connected.');
   }
 
@@ -68,7 +51,7 @@ export class PaymentsService implements OnModuleInit {
 
     try {
       await firstValueFrom(
-        this.clientKafka.emit('payment_results', paymentResult),
+        this.kafkaClient.emit('payment_results', paymentResult),
       );
       this.logger.log(
         `Payment for order ${payload.orderId} resulted in: ${status}. Result sent back to Orders App via Kafka.`,

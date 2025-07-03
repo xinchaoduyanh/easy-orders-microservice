@@ -1,4 +1,3 @@
-// orders-app/src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma/prisma.service';
@@ -15,8 +14,6 @@ async function bootstrap() {
   const kafkaBroker =
     configService.get<string>('KAFKA_BROKER') || 'localhost:9092';
 
-  console.log(`KAFKA_BROKER from config: ${kafkaBroker}`);
-
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.KAFKA,
     options: {
@@ -31,9 +28,6 @@ async function bootstrap() {
   });
 
   await app.startAllMicroservices();
-  console.log(
-    'Orders App (Kafka Consumer) is listening for payment results...',
-  );
 
   const httpPort = process.env.HTTP_PORT || 3000;
   await app.listen(httpPort);
