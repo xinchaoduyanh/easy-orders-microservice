@@ -11,18 +11,22 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
-import { CreateOrderDto, UpdateOrderStatusDto } from './orders.dto'; // Import DTOs
+import { CreateOrderDto, UpdateOrderStatusDto } from './orders.dto'; // Import DTOs (class)
+import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe';
+import { CreateOrderZodSchema, UpdateOrderStatusZodSchema } from './orders.dto';
 
-@Controller('orders') // Base route là /orders
+@Controller('orders')
 export class OrdersController {
   private readonly logger = new Logger(OrdersController.name);
 
   constructor(private readonly ordersService: OrdersService) {}
 
-  @Post() // Đảm bảo decorator này đúng
-  @HttpCode(HttpStatus.CREATED) // Trả về 201 Created
-  async createOrder(@Body() createOrderDto: CreateOrderDto) {
-    this.logger.log('Received request to create order'); // Log này phải xuất hiện
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  async createOrder(
+    @Body(new CustomZodValidationPipe(CreateOrderZodSchema))
+    createOrderDto: CreateOrderDto,
+  ) {
     return this.ordersService.createOrder(createOrderDto);
   }
 
@@ -32,10 +36,11 @@ export class OrdersController {
     return this.ordersService.getOrderById(id);
   }
 
-  @Patch(':id/status') // Endpoint để cập nhật trạng thái
+  @Patch(':id/status')
   async updateOrderStatus(
     @Param('id') id: string,
-    @Body() updateOrderStatusDto: UpdateOrderStatusDto,
+    @Body(new CustomZodValidationPipe(UpdateOrderStatusZodSchema))
+    updateOrderStatusDto: UpdateOrderStatusDto,
   ) {
     this.logger.log(
       `Received request to update status for order ${id} to ${updateOrderStatusDto.status}`,

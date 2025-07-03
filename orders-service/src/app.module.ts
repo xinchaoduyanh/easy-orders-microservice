@@ -5,21 +5,30 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { OrdersModule } from './orders/orders.module'; // Import OrdersModule
 import { ConfigModule } from '@nestjs/config'; // Import ConfigModule
-import { APP_PIPE } from '@nestjs/core'; // Import APP_PIPE
-import { ZodValidationPipe } from 'nestjs-zod'; // Đã sửa import từ 'nestjs-zod' sang '@nestjs/zod'
+import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'; // Import APP_PIPE
+import { HttpExceptionFilter } from 'src/shared/filter/http_exception.filter';
+import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe';
+import { ZodSerializerInterceptor } from 'nestjs-zod';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }), // Tải biến môi trường từ .env
-    PrismaModule, // PrismaModule đã được @Global(), nhưng vẫn nên import ở đây cho rõ ràng
-    OrdersModule, // Import OrdersModule
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    OrdersModule,
+    ProductsModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, ProductsModule],
   providers: [
     AppService,
     {
-      provide: APP_PIPE, // Cấu hình ZodValidationPipe là global pipe
-      useClass: ZodValidationPipe,
+      provide: APP_PIPE,
+      useClass: CustomZodValidationPipe,
+    },
+    { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
     },
   ],
 })
