@@ -35,6 +35,15 @@ import { useOrder } from '@/queries';
 import type { Order } from '@/lib/types';
 import { Eye, X, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
 
 const statusColors = {
   CREATED: 'bg-blue-100 text-blue-800',
@@ -53,6 +62,8 @@ const statusLabels = {
 export default function OrderDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Sử dụng useOrder hook
   const { ordersQuery, cancelOrder, cancelOrderStatus } = useOrder();
@@ -61,6 +72,9 @@ export default function OrderDashboard() {
   const filteredOrders = ordersQuery.data?.filter((order: Order) =>
     statusFilter === 'all' ? true : order.status === statusFilter
   ) || [];
+
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleCancelOrder = (orderId: string) => {
     cancelOrder(orderId, {
@@ -123,7 +137,7 @@ export default function OrderDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOrders.map((order: Order) => (
+              {paginatedOrders.map((order: Order) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-medium">{order.id}</TableCell>
                   <TableCell>{order.userEmail}</TableCell>
@@ -174,6 +188,38 @@ export default function OrderDashboard() {
               ))}
             </TableBody>
           </Table>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Pagination className="mt-6">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={e => { e.preventDefault(); setCurrentPage(p => Math.max(1, p - 1)); }}
+                    aria-disabled={currentPage === 1}
+                  />
+                </PaginationItem>
+                {Array.from({ length: totalPages }).map((_, idx) => (
+                  <PaginationItem key={idx}>
+                    <PaginationLink
+                      href="#"
+                      isActive={currentPage === idx + 1}
+                      onClick={e => { e.preventDefault(); setCurrentPage(idx + 1); }}
+                    >
+                      {idx + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={e => { e.preventDefault(); setCurrentPage(p => Math.min(totalPages, p + 1)); }}
+                    aria-disabled={currentPage === totalPages}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
         </CardContent>
       </Card>
     </div>
