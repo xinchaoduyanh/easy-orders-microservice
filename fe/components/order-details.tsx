@@ -18,7 +18,8 @@ import type { Order } from '@/lib/types';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-
+import { useOrder } from '@/queries';
+import { OrderItem } from '@/lib/types';
 const statusColors = {
   CREATED: 'bg-blue-100 text-blue-800',
   CONFIRMED: 'bg-yellow-100 text-yellow-800',
@@ -49,37 +50,14 @@ const getStatusProgress = (status: string) => {
 };
 
 export default function OrderDetails({ orderId }: { orderId: string }) {
-  const [order, setOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const { orderDetailQuery } = useOrder(orderId);
+  const order: Order | undefined = orderDetailQuery.data;
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    const fetchOrder = async () => {
-      try {
-        const data = await getOrderById(orderId);
-        setOrder(data);
-      } catch (error) {
-        toast({
-          title: 'Lỗi',
-          description: 'Không thể tải thông tin đơn hàng',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrder();
-    interval = setInterval(fetchOrder, 3000);
-    return () => clearInterval(interval);
-  }, [orderId, toast]);
-
-  if (loading) {
+  if (orderDetailQuery.isLoading) {
     return <div>Đang tải...</div>;
   }
 
-  if (!order) {
+  if (orderDetailQuery.isError || !order) {
     return <div>Không tìm thấy đơn hàng</div>;
   }
 
@@ -106,8 +84,8 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
               <span>{order.id}</span>
             </div>
             <div className="flex justify-between">
-              <span className="font-medium">User ID:</span>
-              <span>{order.userId}</span>
+              <span className="font-medium">User Email:</span>
+              <span>{order.userEmail}</span>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Tổng tiền:</span>
@@ -115,7 +93,7 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Trạng thái:</span>
-              <Badge className={statusColors[order.status]}>{statusLabels[order.status]}</Badge>
+              <Badge className={statusColors[order.status as keyof typeof statusColors]}>{statusLabels[order.status as keyof typeof statusLabels]}</Badge>
             </div>
             <div className="flex justify-between">
               <span className="font-medium">Ngày tạo:</span>
@@ -195,7 +173,7 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {order.orderItems.map((item, index) => (
+              {order.orderItems.map((item: OrderItem, index: number) => (
                 <TableRow key={index}>
                   <TableCell>{item.productId}</TableCell>
                   <TableCell>{item.quantity}</TableCell>

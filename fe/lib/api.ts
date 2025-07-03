@@ -1,5 +1,5 @@
 import http from './https';
-import { Order, Product } from './types';
+import { CreateOrderItem, Order, Product } from './types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -17,7 +17,7 @@ export async function getOrderById(id: string) {
 
 export async function createOrder(
   userEmail: string,
-  orderItems: { productId: string; quantity: number }[],
+  orderItems: CreateOrderItem[],
 ) {
   return http.post<Order>(
     `${API_BASE_URL}/orders`,

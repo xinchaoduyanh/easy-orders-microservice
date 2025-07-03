@@ -1,35 +1,25 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { CartProvider } from "@/lib/cart-context"
-import { Toaster } from "@/components/ui/toaster"
-import Navigation from "@/components/navigation"
+import "./globals.css";
+import { Inter } from "next/font/google";
+import Navigation from "@/components/navigation"; // hoặc Header nếu bạn dùng tên khác
+import { Providers } from "./providers"; // nếu bạn có file Providers
 
-const inter = Inter({ subsets: ["latin"] })
-
-export const metadata: Metadata = {
+export const metadata = {
   title: "Cổng Hoạt động Đơn hàng",
   description: "Hệ thống quản lý đơn hàng và sản phẩm",
-    generator: 'v0.dev'
-}
+  generator: ''
+};
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+const inter = Inter({ subsets: ["latin"] });
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="vi">
-      <body className={inter.className}>
-        <CartProvider>
-          <div className="min-h-screen bg-background">
-            <Navigation />
-            <main className="container mx-auto px-4 py-8">{children}</main>
-          </div>
-          <Toaster />
-        </CartProvider>
+    <html lang="en">
+      <body>
+        <Providers>
+          <Navigation /> {/* Thêm dòng này */}
+          {children}
+        </Providers>
       </body>
     </html>
-  )
+  );
 }

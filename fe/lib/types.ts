@@ -9,11 +9,18 @@ export interface Product {
 export type OrderStatus = 'CREATED' | 'CONFIRMED' | 'DELIVERED' | 'CANCELLED';
 
 export interface OrderItem {
+  id: string;
+  orderId: string;
   productId: string;
   quantity: number;
   price: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
-
+export interface CreateOrderItem {
+  productId: string;
+  quantity: number;
+}
 export interface Order {
   id: string;
   userEmail: string;

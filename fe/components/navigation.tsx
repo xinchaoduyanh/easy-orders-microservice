@@ -33,14 +33,16 @@ export default function Navigation() {
 
               return (
                 <Button key={item.href} variant={isActive ? "default" : "ghost"} asChild className="relative">
-                  <Link href={item.href}>
-                    <Icon className="h-4 w-4 mr-2" />
+                  <Link href={item.href} className="flex items-center">
+                    <span className="relative">
+                      <Icon className="h-4 w-4 mr-2" />
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold shadow">
+                          {item.badge}
+                        </span>
+                      )}
+                    </span>
                     {item.label}
-                    {item.badge && item.badge > 0 && (
-                      <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 text-xs">
-                        {item.badge}
-                      </Badge>
-                    )}
                   </Link>
                 </Button>
               )

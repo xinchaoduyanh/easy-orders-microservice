@@ -15,10 +15,11 @@ function OrderDetailsSkeleton() {
   )
 }
 
-export default function OrderDetailsPage({ params }: { params: { id: string } }) {
+export default async function Page({ params }: { params: { id: string } }) {
+  const { id } = await params;
   return (
     <Suspense fallback={<OrderDetailsSkeleton />}>
-      <OrderDetails orderId={params.id} />
+      <OrderDetails orderId={id} />
     </Suspense>
-  )
+  );
 }

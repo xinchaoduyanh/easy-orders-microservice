@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -31,7 +31,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { getOrders, cancelOrder } from '@/lib/api';
+import { useOrder } from '@/queries';
 import type { Order } from '@/lib/types';
 import { Eye, X, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
@@ -51,63 +51,41 @@ const statusLabels = {
 };
 
 export default function OrderDashboard() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
 
-  const fetchOrders = async () => {
-    try {
-      const data = await getOrders();
-      setOrders(data);
-      setFilteredOrders(data);
-    } catch (error) {
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể tải danh sách đơn hàng',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
+  // Sử dụng useOrder hook
+  const { ordersQuery, cancelOrder, cancelOrderStatus } = useOrder();
+
+  // Lọc đơn hàng theo trạng thái
+  const filteredOrders = ordersQuery.data?.filter((order: Order) =>
+    statusFilter === 'all' ? true : order.status === statusFilter
+  ) || [];
+
+  const handleCancelOrder = (orderId: string) => {
+    cancelOrder(orderId, {
+      onSuccess: () => {
+        toast({
+          title: 'Thành công',
+          description: 'Đơn hàng đã được hủy',
+        });
+      },
+      onError: () => {
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể hủy đơn hàng',
+          variant: 'destructive',
+        });
+      },
+    });
   };
 
-  useEffect(() => {
-    fetchOrders();
-
-    // Polling every 5 seconds for real-time updates
-    const interval = setInterval(fetchOrders, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (statusFilter === 'all') {
-      setFilteredOrders(orders);
-    } else {
-      setFilteredOrders(orders.filter((order) => order.status === statusFilter));
-    }
-  }, [orders, statusFilter]);
-
-  const handleCancelOrder = async (orderId: string) => {
-    try {
-      await cancelOrder(orderId);
-      toast({
-        title: 'Thành công',
-        description: 'Đơn hàng đã được hủy',
-      });
-      fetchOrders(); // Refresh the list
-    } catch (error) {
-      toast({
-        title: 'Lỗi',
-        description: 'Không thể hủy đơn hàng',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  if (loading) {
+  if (ordersQuery.isLoading) {
     return <div>Đang tải...</div>;
+  }
+
+  if (ordersQuery.isError) {
+    return <div>Lỗi khi tải danh sách đơn hàng.</div>;
   }
 
   return (
@@ -127,13 +105,7 @@ export default function OrderDashboard() {
             </SelectContent>
           </Select>
         </div>
-
-        <Button onClick={fetchOrders} variant="outline">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Làm mới
-        </Button>
       </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Danh sách Đơn hàng ({filteredOrders.length})</CardTitle>
@@ -143,7 +115,7 @@ export default function OrderDashboard() {
             <TableHeader>
               <TableRow>
                 <TableHead>ID Đơn hàng</TableHead>
-                <TableHead>User ID</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Tổng tiền</TableHead>
                 <TableHead>Trạng thái</TableHead>
                 <TableHead>Ngày tạo</TableHead>
@@ -151,14 +123,14 @@ export default function OrderDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOrders.map((order) => (
+              {filteredOrders.map((order: Order) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-medium">{order.id}</TableCell>
                   <TableCell>{order.userEmail}</TableCell>
                   <TableCell>${Number(order.totalAmount).toFixed(2)}</TableCell>
                   <TableCell>
-                    <Badge className={statusColors[order.status]}>
-                      {statusLabels[order.status]}
+                    <Badge className={statusColors[order.status as keyof typeof statusColors]}>
+                      {statusLabels[order.status as keyof typeof statusLabels]}
                     </Badge>
                   </TableCell>
                   <TableCell>{new Date(order.createdAt).toLocaleDateString('vi-VN')}</TableCell>
@@ -169,7 +141,6 @@ export default function OrderDashboard() {
                           <Eye className="h-4 w-4" />
                         </Link>
                       </Button>
-
                       {order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
@@ -181,8 +152,7 @@ export default function OrderDashboard() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Xác nhận hủy đơn hàng</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Bạn có chắc chắn muốn hủy đơn hàng #{order.id}? Hành động này không
-                                thể hoàn tác.
+                                Bạn có chắc chắn muốn hủy đơn hàng #{order.id}? Hành động này không thể hoàn tác.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -190,6 +160,7 @@ export default function OrderDashboard() {
                               <AlertDialogAction
                                 onClick={() => handleCancelOrder(order.id)}
                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                disabled={cancelOrderStatus === 'loading'}
                               >
                                 Xác nhận hủy
                               </AlertDialogAction>

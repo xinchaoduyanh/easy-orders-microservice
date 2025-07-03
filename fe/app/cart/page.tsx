@@ -21,16 +21,16 @@ import { useRouter } from 'next/navigation';
 
 export default function CartPage() {
   const { cart, updateQuantity, removeFromCart, clearCart, getTotalAmount } = useCart();
-  const [userId, setUserId] = useState('');
+  const [userEmail, setUserEmail] = useState('');
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
   const handleCreateOrder = async () => {
-    if (!userId.trim()) {
+    if (!userEmail.trim()) {
       toast({
         title: 'Lỗi',
-        description: 'Vui lòng nhập User ID',
+        description: 'Vui lòng nhập Emall của bạn',
         variant: 'destructive',
       });
       return;
@@ -51,9 +51,9 @@ export default function CartPage() {
         productId: item.productId,
         quantity: item.quantity,
       }));
-
-      const order = await createOrder(userId, orderItems);
-
+      console.log(orderItems);
+      const order = await createOrder(userEmail, orderItems);
+      console.log(order);
       toast({
         title: 'Thành công',
         description: `Đơn hàng #${order.id} đã được tạo thành công!`,
@@ -159,12 +159,12 @@ export default function CartPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="userId">User ID</Label>
+            <Label htmlFor="userEmail">User Email</Label>
             <Input
-              id="userId"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              placeholder="Nhập User ID của bạn"
+              id="userEmail"
+              value={userEmail}
+              onChange={(e) => setUserEmail(e.target.value)}
+              placeholder="Nhập Eamil của bạn"
             />
           </div>
           <Button onClick={handleCreateOrder} disabled={isCreatingOrder} className="w-full">
