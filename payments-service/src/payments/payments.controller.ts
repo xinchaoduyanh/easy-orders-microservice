@@ -25,22 +25,6 @@ export class PaymentsController {
     this.logger.log(
       `Received payment request for order ID: ${data.orderId} from Kafka. Message: ${originalMessage?.value?.toString()}`,
     );
-    // console.log('Full Kafka message:', originalMessage.value.toString()); // Can log raw message value for debugging
-
-    try {
-      await this.paymentsService.processPayment(data);
-    } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'message' in error) {
-        this.logger.error(
-          `Error processing payment for order ${data.orderId}: ${(error as Error).message}`,
-          (error as Error).stack,
-        );
-      } else {
-        this.logger.error(
-          `Error processing payment for order ${data.orderId}: ${String(error)}`,
-        );
-      }
-      // TODO: Error handling: Could push to a Dead Letter Queue (DLQ)
-    }
+    await this.paymentsService.processPayment(data);
   }
 }

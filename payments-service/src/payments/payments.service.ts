@@ -66,7 +66,6 @@ export class PaymentsService implements OnModuleInit {
       `Preparing to send payment result: ${JSON.stringify(paymentResult)}`,
     );
 
-    // Send payment result back to Orders App via Kafka topic 'payment_results'
     try {
       await firstValueFrom(
         this.clientKafka.emit('payment_results', paymentResult),
@@ -81,6 +80,7 @@ export class PaymentsService implements OnModuleInit {
         `Failed to emit payment result for order ${payload.orderId}: ${errorMessage}`,
         errorStack,
       );
+      throw err;
     }
   }
 }
