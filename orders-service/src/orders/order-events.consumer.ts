@@ -22,9 +22,7 @@ export class OrderEventsConsumer implements OnModuleInit {
     this.logger.log(
       'OrderEventsConsumer initialized and listening for payment_results and inventory topics',
     );
-    this.logger.log(
-      `Process PID: ${process.pid}, ENV: ${process.env.NODE_ENV}`,
-    );
+    this.logger.log(`Process PID: ${process.pid}`);
   }
 
   async onModuleInit() {

@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma/prisma.service';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { ConfigService } from '@nestjs/config';
+import envConfig from '../config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,9 +10,7 @@ async function bootstrap() {
   const prismaService = app.get(PrismaService);
   prismaService.enableShutdownHooks(app);
 
-  const configService = app.get(ConfigService);
-  const kafkaBroker =
-    configService.get<string>('KAFKA_BROKER') || 'localhost:9092';
+  const kafkaBroker = envConfig.KAFKA_BROKER;
 
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.KAFKA,
@@ -29,7 +27,7 @@ async function bootstrap() {
 
   await app.startAllMicroservices();
 
-  const httpPort = process.env.HTTP_PORT || 3000;
+  const httpPort = envConfig.HTTP_PORT;
   await app.listen(httpPort);
   console.log(`Orders App (HTTP Gateway) is listening on port ${httpPort}`);
 }

@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { OrderDeliveredNotification } from 'microservice-shared/index';
 import { Resend } from 'resend';
+import envConfig from '../../config';
 
 @Injectable()
 export class ResendService {
   private resend: Resend;
 
   constructor() {
-    this.resend = new Resend(process.env.RESEND_API_KEY);
+    this.resend = new Resend(envConfig.RESEND_API_KEY);
   }
 
   async sendOrderDeliveredEmail(data: OrderDeliveredNotification) {
