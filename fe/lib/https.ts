@@ -73,7 +73,14 @@ const http = {
     body: any,
     options?: Omit<CustomOptions, 'body'> | undefined
   ) {
-    return request<Response>('POST', url, { ...options, body })
+    return request<Response>('POST', url, {
+      ...options,
+      body: JSON.stringify(body),
+      headers: {
+        ...(options?.headers || {}),
+        'Content-Type': 'application/json',
+      },
+    })
   },
   put<Response>(
     url: string,

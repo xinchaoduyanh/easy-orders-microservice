@@ -14,6 +14,7 @@ export interface OrderDeliveredNotification {
 interface OrderItem {
   id: string;
   orderId: string;
+  name: string;
   productId: string;
   quantity: number;
   price: number;

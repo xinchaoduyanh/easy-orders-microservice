@@ -1,35 +1,82 @@
 import http from './https';
-import { CreateOrderItem, Order, Product } from './types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-export async function getProducts() {
-  return http.get<Product[]>(`${API_BASE_URL}/products`);
-}
+// Thêm counter để theo dõi số lần gọi API
+let apiCallCount = 0;
 
-export async function getOrders() {
-  return http.get<Order[]>(`${API_BASE_URL}/orders`);
-}
+export const getOrders = async () => {
+  apiCallCount++;
+  console.log(`[API] getOrders called (${apiCallCount} times)`);
+  
+  try {
+    const response = await http.get(`${API_BASE_URL}/orders`);
+    console.log(`[API] getOrders success:`, response);
+    return response;
+  } catch (error) {
+    console.error(`[API] getOrders error:`, error);
+    throw error;
+  }
+};
 
-export async function getOrderById(id: string) {
-  return http.get<Order>(`${API_BASE_URL}/orders/${id}`);
-}
+export const getOrderById = async (id: string) => {
+  apiCallCount++;
+  console.log(`[API] getOrderById called for ID: ${id} (${apiCallCount} times)`);
+  
+  try {
+    const response = await http.get(`${API_BASE_URL}/orders/${id}`);
+    console.log(`[API] getOrderById success:`, response);
+    return response;
+  } catch (error) {
+    console.error(`[API] getOrderById error:`, error);
+    throw error;
+  }
+};
 
-export async function createOrder(
-  userEmail: string,
-  orderItems: CreateOrderItem[],
-) {
-  return http.post<Order>(
-    `${API_BASE_URL}/orders`,
-    JSON.stringify({ userEmail, orderItems }),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-}
+export const createOrder = async (userEmail: string, orderItems: { productId: string; quantity: number }[]) => {
+  apiCallCount++;
+  console.log(`[API] createOrder called (${apiCallCount} times)`);
+  
+  try {
+    const response = await http.post(`${API_BASE_URL}/orders`, {
+      userEmail,
+      orderItems,
+    });
+    console.log(`[API] createOrder success:`, response);
+    return response;
+  } catch (error) {
+    console.error(`[API] createOrder error:`, error);
+    throw error;
+  }
+};
 
-export async function cancelOrder(id: string) {
-  return http.put<Order>(`${API_BASE_URL}/orders/${id}/cancel`, null);
-}
+export const cancelOrder = async (id: string) => {
+  apiCallCount++;
+  console.log(`[API] cancelOrder called for ID: ${id} (${apiCallCount} times)`);
+  
+  try {
+    const response = await http.put(`${API_BASE_URL}/orders/${id}/cancel`, null);
+    console.log(`[API] cancelOrder success:`, response);
+    return response;
+  } catch (error) {
+    console.error(`[API] cancelOrder error:`, error);
+    throw error;
+  }
+};
+
+export const getProducts = async () => {
+  apiCallCount++;
+  console.log(`[API] getProducts called (${apiCallCount} times)`);
+  
+  try {
+    const response = await http.get(`${API_BASE_URL}/products`);
+    console.log(`[API] getProducts success:`, response);
+    return response;
+  } catch (error) {
+    console.error(`[API] getProducts error:`, error);
+    throw error;
+  }
+};
+
+// Export counter để debug
+export const getApiCallCount = () => apiCallCount;

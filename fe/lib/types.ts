@@ -2,8 +2,10 @@ export interface Product {
   id: string;
   name: string;
   price: number;
-  description: string;
-  imageUrl: string;
+  description?: string;
+  imageUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type OrderStatus = 'CREATED' | 'CONFIRMED' | 'DELIVERED' | 'CANCELLED';
@@ -11,16 +13,17 @@ export type OrderStatus = 'CREATED' | 'CONFIRMED' | 'DELIVERED' | 'CANCELLED';
 export interface OrderItem {
   id: string;
   orderId: string;
-  productId: string;
+  product: Product;
   quantity: number;
-  price: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
+
 export interface CreateOrderItem {
   productId: string;
   quantity: number;
 }
+
 export interface Order {
   id: string;
   userEmail: string;

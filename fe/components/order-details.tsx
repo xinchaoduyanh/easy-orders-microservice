@@ -20,6 +20,9 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useOrder } from '@/queries';
 import { OrderItem } from '@/lib/types';
+import { getApiCallCount } from '@/lib/api';
+import { useRenderCount } from '@/hooks/use-mobile';
+
 const statusColors = {
   CREATED: 'bg-blue-100 text-blue-800',
   CONFIRMED: 'bg-yellow-100 text-yellow-800',
@@ -50,8 +53,19 @@ const getStatusProgress = (status: string) => {
 };
 
 export default function OrderDetails({ orderId }: { orderId: string }) {
+  const renderCount = useRenderCount('OrderDetails');
   const { orderDetailQuery } = useOrder(orderId);
-  const order: Order | undefined = orderDetailQuery.data;
+  const [order, setOrder] = useState<Order | undefined>(orderDetailQuery.data);
+
+  useEffect(() => {
+    setOrder(orderDetailQuery.data);
+    if (orderDetailQuery.data) {
+      console.log('[OrderDetails] Order data updated:', orderDetailQuery.data);
+    }
+  }, [orderDetailQuery.data]);
+
+  // Socket events are now handled centrally in SocketEventsProvider
+  // No need for individual socket listeners here
 
   if (orderDetailQuery.isLoading) {
     return <div>Đang tải...</div>;
@@ -63,6 +77,21 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
 
   return (
     <div className="space-y-6">
+      {/* Debug Info */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-blue-800">Debug Info - Order Details</h3>
+            <p className="text-sm text-blue-700">
+              Renders: {renderCount} | 
+              API calls: {getApiCallCount()} | 
+              Data fetched: {orderDetailQuery.dataUpdatedAt ? new Date(orderDetailQuery.dataUpdatedAt).toLocaleTimeString() : 'Never'} |
+              Status: {orderDetailQuery.status}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="flex items-center space-x-4">
         <Button variant="outline" size="sm" asChild>
           <Link href="/dashboard">
@@ -173,12 +202,12 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {order.orderItems.map((item: OrderItem, index: number) => (
+              {(order.orderItems ?? []).map((item: OrderItem, index: number) => (
                 <TableRow key={index}>
-                  <TableCell>{item.productId}</TableCell>
+                  <TableCell>{item.product.id}</TableCell>
                   <TableCell>{item.quantity}</TableCell>
-                  <TableCell>${Number(item.price).toFixed(2)}</TableCell>
-                  <TableCell>${(item.quantity * Number(item.price)).toFixed(2)}</TableCell>
+                  <TableCell>${Number(item.product.price).toFixed(2)}</TableCell>
+                  <TableCell>${(item.quantity * Number(item.product.price)).toFixed(2)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

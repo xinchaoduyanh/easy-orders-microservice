@@ -18,7 +18,6 @@ export type CreateOrderItemDto = z.infer<typeof CreateOrderItemZodSchema>;
 export type OrderItemForDbCreation = {
   productId: string;
   quantity: number;
-  price: number; // Giá sản phẩm được lấy từ DB
 };
 
 // Schema và Type cho việc tạo Order

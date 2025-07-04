@@ -9,6 +9,14 @@ export function useOrder(orderId?: string) {
     queryKey: ['orders'],
     queryFn: getOrders,
     enabled: !orderId,
+    // Ngăn refetch tự động
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    // Chỉ refetch khi stale time hết hạn (5 phút)
+    staleTime: 5 * 60 * 1000,
+    // Cache trong 10 phút
+    cacheTime: 10 * 60 * 1000,
   });
 
   // Query: Lấy chi tiết đơn hàng
@@ -16,7 +24,14 @@ export function useOrder(orderId?: string) {
     queryKey: ['order', orderId],
     queryFn: () => getOrderById(orderId!),
     enabled: !!orderId,
-    refetchInterval: !!orderId ? 0 : false, // Có thể set polling nếu muốn
+    // Ngăn refetch tự động
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    // Chỉ refetch khi stale time hết hạn (5 phút)
+    staleTime: 5 * 60 * 1000,
+    // Cache trong 10 phút
+    cacheTime: 10 * 60 * 1000,
   });
 
   // Mutation: Tạo đơn hàng

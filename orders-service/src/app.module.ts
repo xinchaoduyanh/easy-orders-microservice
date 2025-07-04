@@ -11,6 +11,7 @@ import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe
 import { ZodSerializerInterceptor } from 'nestjs-zod';
 import { ProductsModule } from './products/products.module';
 import { KafkaModule } from 'microservice-shared';
+import { OrdersGateway } from './orders/orders.gateway';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { KafkaModule } from 'microservice-shared';
   controllers: [AppController],
   providers: [
     AppService,
+    OrdersGateway,
     {
       provide: APP_PIPE,
       useClass: CustomZodValidationPipe,

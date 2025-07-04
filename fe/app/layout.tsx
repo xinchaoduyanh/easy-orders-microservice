@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import Navigation from "@/components/navigation"; // hoặc Header nếu bạn dùng tên khác
 import { Providers } from "./providers"; // nếu bạn có file Providers
 import { Toaster } from "@/components/ui/toaster";
+import { SocketProvider } from '@/lib/socket-context';
+import { SocketEventsProvider } from '@/components/socket-events-provider';
 
 export const metadata = {
   title: "Cổng Hoạt động Đơn hàng",
@@ -17,9 +19,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={inter.className}>
         <Providers>
-          <Navigation />
-          {children}
-          <Toaster />
+          <SocketProvider>
+            <SocketEventsProvider>
+              <Navigation />
+              {children}
+              <Toaster />
+            </SocketEventsProvider>
+          </SocketProvider>
         </Providers>
       </body>
     </html>

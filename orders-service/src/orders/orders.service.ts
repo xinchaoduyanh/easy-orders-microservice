@@ -15,6 +15,7 @@ import {
 } from './orders.dto';
 import { Order, OrderStatus } from '@prisma/client';
 import { OrderDeliveredNotification } from 'microservice-shared';
+import { OrdersGateway } from './orders.gateway';
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
@@ -24,6 +25,7 @@ export class OrdersService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     @Inject('KAFKA_ORDER_SERVICE') private readonly kafkaClient: ClientKafka,
+    private readonly ordersGateway: OrdersGateway,
   ) {}
 
   async onModuleInit() {
@@ -55,24 +57,22 @@ export class OrdersService implements OnModuleInit {
         orderItemsToCreate.push({
           productId: itemDto.productId,
           quantity: itemDto.quantity,
-          price: itemPrice,
         });
       }
 
       const order = await this.prisma.order.create({
         data: {
           userEmail: createOrderDto.userEmail,
-          totalAmount: totalAmount,
           status: OrderStatus.CREATED,
+          totalAmount: totalAmount,
           orderItems: {
             create: orderItemsToCreate,
           },
         },
-        include: {
-          orderItems: true,
-        },
+        include: { orderItems: { include: { product: true } } },
       });
 
+      this.ordersGateway.emitOrderCreated(order);
       this.logger.log(`Order ${order.id} created.`);
 
       this.kafkaClient.emit('order_events', {
@@ -100,7 +100,7 @@ export class OrdersService implements OnModuleInit {
   async getOrderById(id: string): Promise<Order> {
     const order = await this.prisma.order.findUnique({
       where: { id },
-      include: { orderItems: true },
+      include: { orderItems: { include: { product: true } } },
     });
     if (!order) {
       throw new NotFoundException(`Order with ID ${id} not found.`);
@@ -135,18 +135,17 @@ export class OrdersService implements OnModuleInit {
         );
       }
 
-      const updatedOrder = await this.prisma.order.update({
+      const order = await this.prisma.order.update({
         where: { id },
         data: { status: updateOrderStatusDto.status },
-        include: { orderItems: true },
+        include: { orderItems: { include: { product: true } } },
       });
-      this.logger.log(
-        `Order ${updatedOrder.id} status updated to ${updatedOrder.status}`,
-      );
+      this.ordersGateway.emitOrderUpdated(order);
+      this.logger.log(`Order ${order.id} status updated to ${order.status}`);
 
-      if (updatedOrder.status === OrderStatus.CONFIRMED) {
+      if (order.status === OrderStatus.CONFIRMED) {
         this.logger.log(
-          `Order ${updatedOrder.id} is CONFIRMED. Scheduling auto-delivery in ${this.DELIVERY_DELAY_MS / 1000} seconds.`,
+          `Order ${order.id} is CONFIRMED. Scheduling auto-delivery in ${this.DELIVERY_DELAY_MS / 1000} seconds.`,
         );
         setTimeout(() => {
           void (async () => {
@@ -161,10 +160,12 @@ export class OrdersService implements OnModuleInit {
                 const deliveredOrder = await this.prisma.order.update({
                   where: { id },
                   data: { status: OrderStatus.DELIVERED },
+                  include: { orderItems: { include: { product: true } } },
                 });
                 this.logger.log(
                   `Order ${deliveredOrder.id} automatically moved to DELIVERED state.`,
                 );
+                this.ordersGateway.emitOrderUpdated(deliveredOrder);
                 await this.notifyOrderDelivered(deliveredOrder);
               } else if (currentOrder) {
                 this.logger.warn(
@@ -181,7 +182,7 @@ export class OrdersService implements OnModuleInit {
         }, this.DELIVERY_DELAY_MS);
       }
 
-      return updatedOrder;
+      return order;
     } catch (error) {
       this.logger.error(
         `Failed to update status for order ${id}: ${error.message}`,
@@ -201,7 +202,7 @@ export class OrdersService implements OnModuleInit {
 
   async getAllOrders(): Promise<Order[]> {
     const orders = await this.prisma.order.findMany({
-      include: { orderItems: true },
+      include: { orderItems: { include: { product: true } } },
       orderBy: { createdAt: 'desc' },
     });
     this.logger.log(`Fetched ${orders.length} orders.`);
@@ -247,7 +248,7 @@ export class OrdersService implements OnModuleInit {
     // Fetch order with items
     const fullOrder = await this.prisma.order.findUnique({
       where: { id: order.id },
-      include: { orderItems: true },
+      include: { orderItems: { include: { product: true } } },
     });
 
     if (!fullOrder) {
@@ -264,8 +265,9 @@ export class OrdersService implements OnModuleInit {
           id: item.id,
           orderId: item.orderId,
           productId: item.productId,
+          name: item.product.name,
+          price: item.product.price.toNumber(),
           quantity: item.quantity,
-          price: item.price.toNumber(),
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
         })),
