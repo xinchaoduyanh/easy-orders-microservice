@@ -127,11 +127,11 @@ function DashboardHeader() {
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100/50">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted dark:from-background dark:to-muted">
       <div className="container mx-auto px-4 py-8 space-y-8">
         <DashboardHeader />
 
-        <div className="bg-white rounded-xl shadow-sm border p-6">
+        <div className="bg-card rounded-xl shadow-sm border p-6 text-foreground">
           <Suspense fallback={<OrderDashboardSkeleton />}>
             <OrderDashboard />
           </Suspense>

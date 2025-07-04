@@ -150,7 +150,7 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
 
   if (orderDetailQuery.isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100/50">
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted dark:from-background dark:to-muted">
         <div className="container mx-auto px-4 py-8">
           <OrderDetailsSkeleton />
         </div>
@@ -160,7 +160,7 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
 
   if (orderDetailQuery.isError || !order) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100/50">
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted dark:from-background dark:to-muted">
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
@@ -187,7 +187,7 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
   const totalItems = order.orderItems?.reduce((sum, item) => sum + item.quantity, 0) || 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100/50">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted dark:from-background dark:to-muted">
       <div className="container mx-auto px-4 py-8 space-y-6">
         {/* Breadcrumb & Header */}
         <div className="space-y-4">
