@@ -1,13 +1,10 @@
-import z from 'zod';
 import fs from 'fs';
 import path from 'path';
+import z from 'zod';
 import { config } from 'dotenv';
 
 config({ path: '.env' });
-if (!fs.existsSync(path.resolve('.env'))) {
-  console.log('Không tìm thấy file .env');
-  process.exit(1);
-}
+
 const ConfigSchema = z.object({
   RESEND_API_KEY: z.string(),
   KAFKA_BROKER: z.string().default('localhost:9092'),
