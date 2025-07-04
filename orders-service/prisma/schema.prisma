@@ -34,13 +34,14 @@ model OrderItem {
 }
 
 model Product {
-  id          String   @id @default(uuid()) @map("_id")
-  name        String   @unique
+  id          String           @id @default(uuid()) @map("_id")
+  name        String           @unique
   description String?
-  price       Decimal  @db.Decimal(10, 2)
+  price       Decimal          @db.Decimal(10, 2)
   imageUrl    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  category    ProductCategory  @default(OTHER)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
   OrderItem   OrderItem[]
   @@map("products")
 }
@@ -50,4 +51,15 @@ enum OrderStatus {
   CONFIRMED
   DELIVERED
   CANCELLED
+}
+
+enum ProductCategory {
+  ELECTRONICS
+  CLOTHING
+  BOOKS
+  HOME_GARDEN
+  SPORTS
+  BEAUTY
+  FOOD_BEVERAGE
+  OTHER
 }

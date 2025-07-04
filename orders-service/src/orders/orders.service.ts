@@ -226,6 +226,7 @@ export class OrdersService implements OnModuleInit {
         data: { status: OrderStatus.CANCELLED },
       });
       this.logger.log(`Order ${order.id} cancelled.`);
+      this.ordersGateway.emitOrderUpdated(order);
       return order;
     } catch (error) {
       this.logger.error(
