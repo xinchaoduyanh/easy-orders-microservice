@@ -11,6 +11,7 @@ import { ShoppingCart, AlertCircle } from "lucide-react"
 import { useProduct } from "@/queries"
 import AddToCartDialog from "./add-to-cart-dialog"
 import { CategoryFilter } from "./category-filter"
+import React from "react";
 
 const categoryColors: Record<ProductCategory, string> = {
   ELECTRONICS: "bg-blue-500 hover:bg-blue-600",
@@ -109,6 +110,8 @@ export default function ProductList() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | "ALL">("ALL")
+  const [page, setPage] = useState(1)
+  const PRODUCTS_PER_PAGE = 20;
 
   const { data: products, isLoading, isError } = useProduct()
 
@@ -125,7 +128,16 @@ export default function ProductList() {
   const filteredProducts = products?.filter((product: Product) => {
     if (selectedCategory === "ALL") return true
     return product.category === selectedCategory
-  })
+  }) || [];
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice((page - 1) * PRODUCTS_PER_PAGE, page * PRODUCTS_PER_PAGE);
+
+  // Reset to page 1 when category changes
+  React.useEffect(() => {
+    setPage(1);
+  }, [selectedCategory]);
 
   if (isLoading) {
     return (
@@ -177,10 +189,39 @@ export default function ProductList() {
       <CategoryFilter selectedCategory={selectedCategory} onCategoryChange={setSelectedCategory} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredProducts.map((product: Product) => (
+        {paginatedProducts.map((product: Product) => (
           <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
         ))}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6 gap-2">
+          <button
+            className="px-3 py-1 rounded border bg-card text-foreground disabled:opacity-50"
+            onClick={() => setPage(page - 1)}
+            disabled={page === 1}
+          >
+            &lt;
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i + 1}
+              className={`px-3 py-1 rounded border ${page === i + 1 ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground'}`}
+              onClick={() => setPage(i + 1)}
+            >
+              {i + 1}
+            </button>
+          ))}
+          <button
+            className="px-3 py-1 rounded border bg-card text-foreground disabled:opacity-50"
+            onClick={() => setPage(page + 1)}
+            disabled={page === totalPages}
+          >
+            &gt;
+          </button>
+        </div>
+      )}
 
       <AddToCartDialog product={selectedProduct} isOpen={isDialogOpen} onClose={handleCloseDialog} />
     </div>

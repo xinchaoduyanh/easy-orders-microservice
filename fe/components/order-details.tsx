@@ -489,26 +489,7 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Thao tác nhanh</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start bg-transparent">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Gửi email cho khách hàng
-                </Button>
-                <Button variant="outline" className="w-full justify-start bg-transparent">
-                  <Download className="h-4 w-4 mr-2" />
-                  Tải hóa đơn
-                </Button>
-                <Button variant="outline" className="w-full justify-start bg-transparent">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Cập nhật trạng thái
-                </Button>
-              </CardContent>
-            </Card>
+  
           </div>
         </div>
       </div>
