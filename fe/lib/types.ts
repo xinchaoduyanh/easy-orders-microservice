@@ -1,9 +1,20 @@
+export type ProductCategory = 
+  | 'ELECTRONICS'
+  | 'CLOTHING'
+  | 'BOOKS'
+  | 'HOME_GARDEN'
+  | 'SPORTS'
+  | 'BEAUTY'
+  | 'FOOD_BEVERAGE'
+  | 'OTHER';
+
 export interface Product {
   id: string;
   name: string;
   price: number;
   description?: string;
   imageUrl?: string;
+  category: ProductCategory;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -7,6 +7,7 @@ export interface CartItem {
   productName: string
   price: number
   quantity: number
+  imageUrl?: string // Thêm trường imageUrl
 }
 
 interface CartState {

@@ -5,10 +5,33 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/lib/cart-context';
 import { useToast } from '@/hooks/use-toast';
-import type { Product } from '@/lib/types';
+import type { Product, ProductCategory } from '@/lib/types';
 import { ShoppingCart, Minus, Plus } from 'lucide-react';
+
+const categoryColors: Record<ProductCategory, string> = {
+  ELECTRONICS: 'bg-blue-500',
+  CLOTHING: 'bg-purple-500',
+  BOOKS: 'bg-green-500',
+  HOME_GARDEN: 'bg-orange-500',
+  SPORTS: 'bg-red-500',
+  BEAUTY: 'bg-pink-500',
+  FOOD_BEVERAGE: 'bg-yellow-500',
+  OTHER: 'bg-gray-400',
+};
+
+const categoryLabels: Record<ProductCategory, string> = {
+  ELECTRONICS: 'Điện tử',
+  CLOTHING: 'Thời trang',
+  BOOKS: 'Sách',
+  HOME_GARDEN: 'Nhà cửa',
+  SPORTS: 'Thể thao',
+  BEAUTY: 'Làm đẹp',
+  FOOD_BEVERAGE: 'Thực phẩm',
+  OTHER: 'Khác',
+};
 
 interface AddToCartDialogProps {
   product: Product | null;
@@ -35,6 +58,7 @@ export default function AddToCartDialog({ product, isOpen, onClose }: AddToCartD
       productName: product.name,
       price: product.price,
       quantity: quantity,
+      imageUrl: product.imageUrl,
     });
 
     toast({
@@ -71,10 +95,21 @@ export default function AddToCartDialog({ product, isOpen, onClose }: AddToCartD
               />
             )}
             <div className="flex-1">
-              <h3 className="font-semibold">{product.name}</h3>
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-semibold">{product.name}</h3>
+                <Badge 
+                  variant="secondary" 
+                  className={`${categoryColors[product.category]} text-white`}
+                >
+                  {categoryLabels[product.category]}
+                </Badge>
+              </div>
               <p className="text-2xl font-bold text-primary">
                 ${Number(product.price).toFixed(2)}
               </p>
+              {product.description && (
+                <p className="text-sm text-gray-500 mt-1">{product.description}</p>
+              )}
             </div>
           </div>
 

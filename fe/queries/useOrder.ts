@@ -10,9 +10,8 @@ export function useOrder(orderId?: string) {
     queryFn: getOrders,
     enabled: !orderId,
     // Ngăn refetch tự động
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
     // Chỉ refetch khi stale time hết hạn (5 phút)
     staleTime: 5 * 60 * 1000,
     // Cache trong 10 phút
