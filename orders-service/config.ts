@@ -1,12 +1,10 @@
 import z from 'zod';
-import fs from 'fs';
-import path from 'path';
+
 import { config } from 'dotenv';
 
 config({
   path: '.env',
 });
-
 
 const ConfigSchema = z.object({
   DATABASE_URL: z.string(),

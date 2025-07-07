@@ -5,7 +5,7 @@ import { config } from 'dotenv';
 config({ path: '.env' });
 
 const ConfigSchema = z.object({
-  // Thêm các biến môi trường cần thiết cho payments-service ở đây
+  KAFKA_BROKER: z.string(),
 });
 
 const configServer = ConfigSchema.safeParse(process.env);

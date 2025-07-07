@@ -10,14 +10,12 @@ async function bootstrap() {
   const prismaService = app.get(PrismaService);
   prismaService.enableShutdownHooks(app);
 
-  const kafkaBroker = envConfig.KAFKA_BROKER;
-
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.KAFKA,
     options: {
       client: {
         clientId: 'orders-app-main-consumer-client',
-        brokers: [kafkaBroker],
+        brokers: [envConfig.KAFKA_BROKER],
       },
       consumer: {
         groupId: 'orders-app-results-consumer-group-v2',
