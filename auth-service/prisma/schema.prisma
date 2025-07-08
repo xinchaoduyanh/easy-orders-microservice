@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  password     String?        // Null for OAuth users
+  firstName    String?
+  lastName     String?
+  avatar       String?
+  provider     AuthProvider   @default(LOCAL)
+  providerId   String?        // For OAuth providers (Google, GitHub)
+  status       UserStatus     @default(UNVERIFIED)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  isRevoked Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+  GITHUB
+}
+
+enum UserStatus {
+  UNVERIFIED  // 0: chưa verify
+  VERIFIED    // 1: verified
+  INACTIVE    // 2: không hoạt động
+}
