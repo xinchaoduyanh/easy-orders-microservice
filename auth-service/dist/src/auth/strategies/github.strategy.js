@@ -16,14 +16,19 @@ const passport_github2_1 = require("passport-github2");
 const config_1 = require("../../../config");
 let GithubStrategy = class GithubStrategy extends (0, passport_1.PassportStrategy)(passport_github2_1.Strategy, 'github') {
     constructor() {
-        super({
+        const config = {
             clientID: config_1.default.GITHUB_CLIENT_ID,
             clientSecret: config_1.default.GITHUB_CLIENT_SECRET,
             callbackURL: config_1.default.GITHUB_CALLBACK_URL,
             scope: ['user:email'],
-        });
+        };
+        console.log('GITHUB OAUTH: Strategy config =', config);
+        super(config);
     }
     async validate(accessToken, refreshToken, profile, done) {
+        console.log('GITHUB OAUTH: accessToken =', accessToken);
+        console.log('GITHUB OAUTH: refreshToken =', refreshToken);
+        console.log('GITHUB OAUTH: profile =', profile);
         const { id, username, emails, photos } = profile;
         const user = {
             provider: 'GITHUB',

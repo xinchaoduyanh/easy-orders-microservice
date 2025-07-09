@@ -25,7 +25,7 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
-import { createOrder } from "@/lib/api"
+import { createOrder } from "@/lib/order-api"
 import { useRouter } from "next/navigation"
 
 export default function CartPage() {
@@ -82,7 +82,7 @@ export default function CartPage() {
 
       toast({
         title: "Thành công",
-        description: `Đơn hàng #${order.id} đã được tạo thành công!`,
+        description: order.message || `Đơn hàng #${order.id} đã được tạo thành công!`,
       })
 
       clearCart()

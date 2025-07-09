@@ -24,6 +24,7 @@ export type User = {
   provider: 'LOCAL' | 'GOOGLE' | 'GITHUB';
   providerId?: string | null;
   status: 'UNVERIFIED' | 'VERIFIED' | 'INACTIVE';
+  redirectUri?: string; // Thêm trường này để phục vụ OAuth
 };
 
 // Request DTOs

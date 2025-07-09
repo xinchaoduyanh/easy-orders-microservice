@@ -5,6 +5,7 @@ import { Providers } from "./providers"; // nếu bạn có file Providers
 import { Toaster } from "@/components/ui/toaster";
 import { SocketProvider } from '@/lib/socket-context';
 import { SocketEventsProvider } from '@/components/socket-events-provider';
+import { AuthProvider } from "@/lib/auth-context";
 
 export const metadata = {
   title: "Cổng Hoạt động Đơn hàng",
@@ -18,15 +19,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Providers>
-          <SocketProvider>
-            <SocketEventsProvider>
-              <Navigation />
-              {children}
-              <Toaster />
-            </SocketEventsProvider>
-          </SocketProvider>
-        </Providers>
+        <AuthProvider>
+          <Providers>
+            <SocketProvider>
+              <SocketEventsProvider>
+                <Navigation />
+                {children}
+                <Toaster />
+              </SocketEventsProvider>
+            </SocketProvider>
+          </Providers>
+        </AuthProvider>
       </body>
     </html>
   );

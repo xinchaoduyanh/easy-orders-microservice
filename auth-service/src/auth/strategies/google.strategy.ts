@@ -11,15 +11,36 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       clientSecret: envConfig.GOOGLE_CLIENT_SECRET,
       callbackURL: envConfig.GOOGLE_CALLBACK_URL,
       scope: ['email', 'profile'],
+      passReqToCallback: true, // Cho phép truyền req vào validate
     });
+    // Log callbackURL thực tế
+    console.log('BE OAUTH: GOOGLE_CALLBACK_URL =', envConfig.GOOGLE_CALLBACK_URL);
   }
 
   async validate(
+    req: any, // Thêm req vào signature
     accessToken: string,
     refreshToken: string,
     profile: any,
     done: VerifyCallback,
   ): Promise<any> {
+    let redirectUri;
+    // Log state nhận được từ Google callback
+    console.log('BE OAUTH: [validate] state nhận được =', req.query.state);
+    if (req.query.state) {
+      try {
+        const stateDecoded = Buffer.from(req.query.state as string, 'base64').toString();
+        const stateObj = JSON.parse(stateDecoded);
+        // Log stateObj sau khi giải mã
+        console.log('BE OAUTH: [validate] stateObj sau khi decode =', stateObj);
+        redirectUri = stateObj.redirectUri;
+      } catch (e) {
+        console.error('BE OAUTH: [validate] State decode error:', e);
+        redirectUri = undefined;
+      }
+    }
+    // Lưu redirectUri vào req.user hoặc req.session để callback dùng
+    req.redirectUri = redirectUri;
     const { id, emails, displayName, photos } = profile;
     const user = {
       provider: 'GOOGLE',
@@ -28,6 +49,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       name: displayName,
       avatar: photos[0]?.value,
     };
-    done(null, user);
+    done(null, { ...user, redirectUri });
   }
 }

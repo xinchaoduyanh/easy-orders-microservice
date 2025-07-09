@@ -149,6 +149,16 @@ let AuthService = class AuthService {
         const tokens = await this.generateTokens(user);
         return { user: this.toUserType(user), ...tokens };
     }
+    async googleOAuthCallback(profile, redirectUri) {
+        const result = await this.googleOAuth(profile);
+        if (redirectUri) {
+            const userInfo = encodeURIComponent(JSON.stringify(result.user));
+            const redirectUrl = `${redirectUri}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&user=${userInfo}`;
+            console.log('BE OAUTH: Sẽ redirect về FE URL =', redirectUrl);
+            return { redirectUrl };
+        }
+        return { result };
+    }
     async githubOAuth(profile) {
         let user = await this.prisma.user.findUnique({ where: { email: profile.email } });
         if (!user) {
@@ -166,6 +176,15 @@ let AuthService = class AuthService {
         this.validateUserStatus(user);
         const tokens = await this.generateTokens(user);
         return { user: this.toUserType(user), ...tokens };
+    }
+    async githubOAuthCallback(profile, redirectUri) {
+        const result = await this.githubOAuth(profile);
+        if (redirectUri) {
+            const userInfo = encodeURIComponent(JSON.stringify(result.user));
+            const redirectUrl = `${redirectUri}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&user=${userInfo}`;
+            return { redirectUrl };
+        }
+        return { result };
     }
     async me(user) {
         const userData = await this.prisma.user.findUnique({ where: { id: user.id } });

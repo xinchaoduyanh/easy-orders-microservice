@@ -227,6 +227,27 @@ export class AuthService {
   }
 
   /**
+   * Handle Google OAuth callback with redirect logic
+   */
+  async googleOAuthCallback(
+    profile: any,
+    redirectUri?: string,
+  ): Promise<{ redirectUrl?: string; result?: AuthResponse }> {
+    const result = await this.googleOAuth(profile);
+
+    if (redirectUri) {
+      // Encode user info as URI component (JSON string)
+      const userInfo = encodeURIComponent(JSON.stringify(result.user));
+      const redirectUrl = `${redirectUri}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&user=${userInfo}`;
+      // Log URL redirect về FE
+      console.log('BE OAUTH: Sẽ redirect về FE URL =', redirectUrl);
+      return { redirectUrl };
+    }
+
+    return { result };
+  }
+
+  /**
    * Handle GitHub OAuth
    */
   async githubOAuth(profile: any): Promise<AuthResponse> {
@@ -249,6 +270,25 @@ export class AuthService {
 
     const tokens = await this.generateTokens(user);
     return { user: this.toUserType(user), ...tokens };
+  }
+
+  /**
+   * Handle GitHub OAuth callback with redirect logic
+   */
+  async githubOAuthCallback(
+    profile: any,
+    redirectUri?: string,
+  ): Promise<{ redirectUrl?: string; result?: AuthResponse }> {
+    const result = await this.githubOAuth(profile);
+
+    if (redirectUri) {
+      // Encode user info as URI component (JSON string)
+      const userInfo = encodeURIComponent(JSON.stringify(result.user));
+      const redirectUrl = `${redirectUri}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&user=${userInfo}`;
+      return { redirectUrl };
+    }
+
+    return { result };
   }
 
   /**

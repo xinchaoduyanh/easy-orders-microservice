@@ -22,9 +22,9 @@ export declare class AuthController {
     logout(body: RefreshTokenDto): Promise<LogoutResponse>;
     me(user: any): Promise<User>;
     revokeAll(user: any): Promise<LogoutResponse>;
-    googleAuth(): Promise<void>;
-    googleCallback(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
-    githubAuth(): Promise<void>;
-    githubCallback(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;
+    googleAuth(req: Request, res: Response): Promise<void>;
+    googleCallback(req: Request, res: Response): Promise<AuthResponse | void>;
+    githubAuth(req: Request, res: Response): Promise<void>;
+    githubCallback(req: Request, res: Response): Promise<AuthResponse | void>;
 }
 export {};

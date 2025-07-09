@@ -27,7 +27,15 @@ export declare class AuthService {
         message: string;
     }>;
     googleOAuth(profile: any): Promise<AuthResponse>;
+    googleOAuthCallback(profile: any, redirectUri?: string): Promise<{
+        redirectUrl?: string;
+        result?: AuthResponse;
+    }>;
     githubOAuth(profile: any): Promise<AuthResponse>;
+    githubOAuthCallback(profile: any, redirectUri?: string): Promise<{
+        redirectUrl?: string;
+        result?: AuthResponse;
+    }>;
     me(user: any): Promise<User | null>;
 }
 export {};

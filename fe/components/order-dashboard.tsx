@@ -43,9 +43,7 @@ import {
   PaginationPrevious,
   PaginationNext,
   PaginationEllipsis,
-} from '@/components/ui/pagination';
-import { getApiCallCount } from '@/lib/api';
-import { useRenderCount } from '@/hooks/use-mobile';
+  } from '@/components/ui/pagination';
 
 const statusColors = {
   CREATED: 'bg-blue-100 text-blue-800',
@@ -62,7 +60,6 @@ const statusLabels = {
 };
 
 export default function OrderDashboard() {
-  const renderCount = useRenderCount('OrderDashboard');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const { toast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
@@ -80,16 +77,16 @@ export default function OrderDashboard() {
 
   const handleCancelOrder = (orderId: string) => {
     cancelOrder(orderId, {
-      onSuccess: () => {
+      onSuccess: (data) => {
         toast({
           title: 'Thành công',
-          description: 'Đơn hàng đã được hủy',
+          description: data?.message || 'Đơn hàng đã được hủy',
         });
       },
-      onError: () => {
+      onError: (error: any) => {
         toast({
           title: 'Lỗi',
-          description: 'Không thể hủy đơn hàng',
+          description: error?.message || 'Không thể hủy đơn hàng',
           variant: 'destructive',
         });
       },
@@ -114,28 +111,16 @@ export default function OrderDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Debug Info */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold text-yellow-800">Debug Info</h3>
-            <p className="text-sm text-yellow-700">
-              Renders: {renderCount} | 
-              API calls: {getApiCallCount()} | 
-              Data fetched: {ordersQuery.dataUpdatedAt ? new Date(ordersQuery.dataUpdatedAt).toLocaleTimeString() : 'Never'} |
-              Status: {ordersQuery.status}
-            </p>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleManualRefresh}
-            disabled={ordersQuery.isFetching}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${ordersQuery.isFetching ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
+      <div className="flex items-center justify-end">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleManualRefresh}
+          disabled={ordersQuery.isFetching}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${ordersQuery.isFetching ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       <div className="flex items-center justify-between">

@@ -141,10 +141,11 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
   }
 
   const handleRefresh = () => {
-    orderDetailQuery.refetch()
-    toast({
-      title: "Đã làm mới",
-      description: "Thông tin đơn hàng đã được cập nhật",
+    orderDetailQuery.refetch().then((res) => {
+      toast({
+        title: "Đã làm mới",
+        description: res.data?.message || "Thông tin đơn hàng đã được cập nhật",
+      })
     })
   }
 

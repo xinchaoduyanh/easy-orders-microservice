@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getOrders, getOrderById, createOrder, cancelOrder } from '../lib/api';
+import { getOrders, getOrderById, createOrder, cancelOrder } from '../lib/order-api';
 
 export function useOrder(orderId?: string) {
   const queryClient = useQueryClient();
