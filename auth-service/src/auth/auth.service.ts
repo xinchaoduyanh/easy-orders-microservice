@@ -239,8 +239,7 @@ export class AuthService {
       // Encode user info as URI component (JSON string)
       const userInfo = encodeURIComponent(JSON.stringify(result.user));
       const redirectUrl = `${redirectUri}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&user=${userInfo}`;
-      // Log URL redirect về FE
-      console.log('BE OAUTH: Sẽ redirect về FE URL =', redirectUrl);
+      // Xóa log debug
       return { redirectUrl };
     }
 

@@ -13,8 +13,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       scope: ['email', 'profile'],
       passReqToCallback: true, // Cho phép truyền req vào validate
     });
-    // Log callbackURL thực tế
-    console.log('BE OAUTH: GOOGLE_CALLBACK_URL =', envConfig.GOOGLE_CALLBACK_URL);
+    // Xóa log debug
   }
 
   async validate(
@@ -25,17 +24,13 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     done: VerifyCallback,
   ): Promise<any> {
     let redirectUri;
-    // Log state nhận được từ Google callback
-    console.log('BE OAUTH: [validate] state nhận được =', req.query.state);
+    // Xóa log debug
     if (req.query.state) {
       try {
         const stateDecoded = Buffer.from(req.query.state as string, 'base64').toString();
         const stateObj = JSON.parse(stateDecoded);
-        // Log stateObj sau khi giải mã
-        console.log('BE OAUTH: [validate] stateObj sau khi decode =', stateObj);
         redirectUri = stateObj.redirectUri;
       } catch (e) {
-        console.error('BE OAUTH: [validate] State decode error:', e);
         redirectUri = undefined;
       }
     }

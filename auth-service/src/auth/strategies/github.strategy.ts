@@ -12,7 +12,6 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
       callbackURL: envConfig.GITHUB_CALLBACK_URL,
       scope: ['user:email'],
     };
-    console.log('GITHUB OAUTH: Strategy config =', config);
     super(config);
   }
 
@@ -22,10 +21,6 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     profile: any,
     done: Function,
   ): Promise<any> {
-    // Log chi tiết để debug callback GitHub
-    console.log('GITHUB OAUTH: accessToken =', accessToken);
-    console.log('GITHUB OAUTH: refreshToken =', refreshToken);
-    console.log('GITHUB OAUTH: profile =', profile);
     const { id, username, emails, photos } = profile;
     const user = {
       provider: 'GITHUB',

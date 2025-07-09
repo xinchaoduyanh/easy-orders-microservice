@@ -111,8 +111,6 @@ export class AuthController {
   async googleCallback(@Req() req: Request, @Res() res: Response): Promise<AuthResponse | void> {
     // Lấy redirectUri từ req.user (do strategy trả về)
     const redirectUri = (req.user as User).redirectUri || '/';
-    console.log('BE OAUTH: redirectUri FE muốn nhận lại =', redirectUri);
-
     const callbackResult = await this.authService.googleOAuthCallback(req.user, redirectUri);
     if (callbackResult.redirectUrl) {
       return res.redirect(callbackResult.redirectUrl);
@@ -137,7 +135,7 @@ export class AuthController {
   @UseGuards(AuthGuard('github'))
   @ApiResponseOk('GitHub OAuth successful')
   async githubCallback(@Req() req: Request, @Res() res: Response): Promise<AuthResponse | void> {
-    // Giải mã state để lấy redirectUri
+    // Xóa log debug
     let redirectUri = '/';
     if (req.query.state) {
       try {
@@ -147,7 +145,6 @@ export class AuthController {
         redirectUri = '/';
       }
     }
-    console.log('BE OAUTH: redirectUri FE muốn nhận lại =', redirectUri);
     const callbackResult = await this.authService.githubOAuthCallback(req.user, redirectUri);
     if (callbackResult.redirectUrl) {
       return res.redirect(callbackResult.redirectUrl);
