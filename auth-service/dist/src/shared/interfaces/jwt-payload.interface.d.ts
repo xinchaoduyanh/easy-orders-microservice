@@ -1,12 +1,12 @@
 export interface JwtPayload {
-    sub: string;
+    userId: string;
     email: string;
     provider: string;
     iat: number;
     exp: number;
 }
 export interface AuthUser {
-    id: string;
+    userId: string;
     email: string;
     provider: string;
     firstName?: string;

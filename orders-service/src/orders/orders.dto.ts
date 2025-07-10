@@ -32,7 +32,9 @@ export const CreateOrderZodSchema = z
       .min(1, { message: 'Order must contain at least one item' }),
   })
   .strict();
-export type CreateOrderDto = z.infer<typeof CreateOrderZodSchema>;
+export type CreateOrderDto = z.infer<typeof CreateOrderZodSchema> & {
+  userId: string;
+};
 
 // Schema và Type cho việc cập nhật trạng thái đơn hàng
 export const UpdateOrderStatusZodSchema = z

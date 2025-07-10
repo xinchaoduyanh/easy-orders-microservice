@@ -23,20 +23,16 @@ let GoogleStrategy = class GoogleStrategy extends (0, passport_1.PassportStrateg
             scope: ['email', 'profile'],
             passReqToCallback: true,
         });
-        console.log('BE OAUTH: GOOGLE_CALLBACK_URL =', config_1.default.GOOGLE_CALLBACK_URL);
     }
     async validate(req, accessToken, refreshToken, profile, done) {
         let redirectUri;
-        console.log('BE OAUTH: [validate] state nhận được =', req.query.state);
         if (req.query.state) {
             try {
                 const stateDecoded = Buffer.from(req.query.state, 'base64').toString();
                 const stateObj = JSON.parse(stateDecoded);
-                console.log('BE OAUTH: [validate] stateObj sau khi decode =', stateObj);
                 redirectUri = stateObj.redirectUri;
             }
             catch (e) {
-                console.error('BE OAUTH: [validate] State decode error:', e);
                 redirectUri = undefined;
             }
         }

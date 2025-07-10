@@ -10,6 +10,10 @@ const ConfigSchema = z.object({
   DATABASE_URL: z.string(),
   KAFKA_BROKER: z.string().default('localhost:9092'),
   HTTP_PORT: z.string().default('3000'),
+  JWT_SECRET: z.string(),
+  JWT_REFRESH_SECRET: z.string(),
+  JWT_EXPIRES_IN: z.string(),
+  JWT_REFRESH_EXPIRES_IN: z.string(),
 });
 
 const configServer = ConfigSchema.safeParse(process.env);

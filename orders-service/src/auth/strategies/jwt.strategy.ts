@@ -15,7 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     return {
-      userId: payload.userId, // Sử dụng userId từ JWT payload
+      userId: payload.userId, // Lấy userId đúng trường mới
       email: payload.email,
       provider: payload.provider,
       firstName: payload.firstName,

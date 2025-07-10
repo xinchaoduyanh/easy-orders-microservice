@@ -8,6 +8,7 @@ import {
   Param,
   Logger,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto, UpdateOrderStatusDto } from './orders.dto'; // Import DTOs (class)
@@ -18,9 +19,13 @@ import {
   ApiResponseOk,
   ApiResponseCreated,
 } from 'src/shared/decorators/response.decorator';
+import { JwtAuthGuard } from '../auth/strategies/jwt-auth.guard';
+import { CurrentUser } from 'src/shared/decorators/current-user.decorator';
+import { AuthUser } from 'src/shared/interfaces/jwt-payload.interface';
 
 @Controller('orders')
 @UseInterceptors(ResponseInterceptor)
+@UseGuards(JwtAuthGuard)
 export class OrdersController {
   private readonly logger = new Logger(OrdersController.name);
 
@@ -31,8 +36,25 @@ export class OrdersController {
   async createOrder(
     @Body(new CustomZodValidationPipe(CreateOrderZodSchema))
     createOrderDto: CreateOrderDto,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.ordersService.createOrder(createOrderDto);
+    return this.ordersService.createOrder({
+      ...createOrderDto,
+      userId: user.userId,
+    });
+  }
+
+  @Get('me')
+  @ApiResponseOk('Orders of current user fetched successfully')
+  async getMyOrders(@CurrentUser() user: AuthUser) {
+    return this.ordersService.getOrdersByUserId(user.userId);
+  }
+
+  @Get()
+  @ApiResponseOk('All orders fetched successfully')
+  async getAllOrders() {
+    this.logger.log('Received request to get all orders');
+    return this.ordersService.getAllOrders();
   }
 
   @Get(':id')
@@ -60,12 +82,5 @@ export class OrdersController {
   async cancelOrder(@Param('id') id: string) {
     this.logger.log(`Received request to cancel order ID: ${id}`);
     return this.ordersService.cancelOrder(id);
-  }
-
-  @Get()
-  @ApiResponseOk('All orders fetched successfully')
-  async getAllOrders() {
-    this.logger.log('Received request to get all orders');
-    return this.ordersService.getAllOrders();
   }
 }

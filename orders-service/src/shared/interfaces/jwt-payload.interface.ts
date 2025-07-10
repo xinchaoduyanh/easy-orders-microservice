@@ -7,7 +7,7 @@ export interface JwtPayload {
 }
 
 export interface AuthUser {
-  userId: string; // Được map từ userId trong JWT payload
+  userId: string;
   email: string;
   provider: string;
   firstName?: string;

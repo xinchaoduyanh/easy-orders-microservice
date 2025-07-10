@@ -19,6 +19,7 @@ import {
   RefreshTokenSchema,
   RefreshTokenDto,
   User,
+  AuthResponse,
 } from './auth.dto';
 import { Request, Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
@@ -28,20 +29,6 @@ import { ApiResponseOk, ApiResponseCreated } from '../shared/decorators/response
 import envConfig from '../../config';
 
 // Response types
-interface AuthResponse {
-  user?: User;
-  access_token: string;
-  refresh_token: string;
-}
-
-interface RegisterResponse {
-  success: boolean;
-  message?: string;
-}
-
-interface LogoutResponse {
-  message: string;
-}
 
 @Controller('auth')
 @UseInterceptors(ResponseInterceptor)
@@ -51,7 +38,7 @@ export class AuthController {
   @Post('register')
   @UsePipes(new CustomZodValidationPipe(RegisterSchema))
   @ApiResponseCreated('User registered successfully')
-  async register(@Body() body: RegisterDto): Promise<RegisterResponse> {
+  async register(@Body() body: RegisterDto): Promise<any> {
     return this.authService.register(body);
   }
 
@@ -65,28 +52,28 @@ export class AuthController {
   @Post('refresh')
   @UsePipes(new CustomZodValidationPipe(RefreshTokenSchema))
   @ApiResponseOk('Token refreshed successfully')
-  async refresh(@Body() body: RefreshTokenDto): Promise<AuthResponse> {
+  async refresh(@Body() body: RefreshTokenDto): Promise<any> {
     return this.authService.refresh(body);
   }
 
   @Post('logout')
   @UsePipes(new CustomZodValidationPipe(RefreshTokenSchema))
   @ApiResponseOk('Logout successful')
-  async logout(@Body() body: RefreshTokenDto): Promise<LogoutResponse> {
+  async logout(@Body() body: RefreshTokenDto): Promise<any> {
     return this.authService.logout(body);
   }
 
   @Get('me')
   @UseGuards(AuthGuard('jwt'))
   @ApiResponseOk('User profile retrieved successfully')
-  async me(@CurrentUser() user: any): Promise<User> {
+  async me(@CurrentUser() user: any): Promise<any> {
     return this.authService.me(user);
   }
 
   @Post('revoke-all')
   @UseGuards(AuthGuard('jwt'))
   @ApiResponseOk('All tokens revoked successfully')
-  async revokeAll(@CurrentUser() user: any): Promise<LogoutResponse> {
+  async revokeAll(@CurrentUser() user: any): Promise<any> {
     return this.authService.revokeAll(user.id);
   }
 
@@ -108,7 +95,7 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   @ApiResponseOk('Google OAuth successful')
-  async googleCallback(@Req() req: Request, @Res() res: Response): Promise<AuthResponse | void> {
+  async googleCallback(@Req() req: Request, @Res() res: Response): Promise<any> {
     // Lấy redirectUri từ req.user (do strategy trả về)
     const redirectUri = (req.user as User).redirectUri || '/';
     const callbackResult = await this.authService.googleOAuthCallback(req.user, redirectUri);
@@ -134,7 +121,7 @@ export class AuthController {
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
   @ApiResponseOk('GitHub OAuth successful')
-  async githubCallback(@Req() req: Request, @Res() res: Response): Promise<AuthResponse | void> {
+  async githubCallback(@Req() req: Request, @Res() res: Response): Promise<any> {
     // Xóa log debug
     let redirectUri = '/';
     if (req.query.state) {

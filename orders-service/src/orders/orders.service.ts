@@ -36,6 +36,7 @@ export class OrdersService implements OnModuleInit {
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
     try {
+      console.log('createOrderDto:', createOrderDto);
       let totalAmount: number = 0;
       const orderItemsToCreate: OrderItemForDbCreation[] = [];
 
@@ -63,6 +64,7 @@ export class OrdersService implements OnModuleInit {
       const order = await this.prisma.order.create({
         data: {
           userEmail: createOrderDto.userEmail,
+          userId: createOrderDto.userId,
           status: OrderStatus.CREATED,
           totalAmount: totalAmount,
           orderItems: {
@@ -207,6 +209,14 @@ export class OrdersService implements OnModuleInit {
     });
     this.logger.log(`Fetched ${orders.length} orders.`);
     return orders;
+  }
+
+  async getOrdersByUserId(userId: string): Promise<Order[]> {
+    return this.prisma.order.findMany({
+      where: { userId },
+      include: { orderItems: { include: { product: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   async cancelOrder(id: string): Promise<Order> {

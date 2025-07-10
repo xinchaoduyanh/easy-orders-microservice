@@ -1,7 +1,8 @@
 import { fetchWithAuth } from "./api";
 
 export const getOrders = async () => {
-  const res = await fetchWithAuth("/api/orders");
+  // Get current user's orders only
+  const res = await fetchWithAuth("/api/orders/me");
   if (!res.ok) throw new Error("Failed to fetch orders");
   const data = await res.json();
   return data.data;

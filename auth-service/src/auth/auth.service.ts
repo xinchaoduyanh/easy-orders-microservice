@@ -14,7 +14,7 @@ const BCRYPT_ROUNDS = 12;
 
 // Types
 interface TokenPayload {
-  id: string;
+  userId: string;
   email: string;
   provider: string;
   firstName?: string;
@@ -53,7 +53,7 @@ export class AuthService {
    */
   private async generateTokens(user: any): Promise<TokenResponse> {
     const payload: TokenPayload = {
-      id: user.id,
+      userId: user.id, // Đổi thành userId
       email: user.email,
       provider: user.provider,
       firstName: user.firstName,

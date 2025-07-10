@@ -12,6 +12,7 @@ import { ZodSerializerInterceptor } from 'nestjs-zod';
 import { ProductsModule } from './products/products.module';
 import { KafkaModule } from 'microservice-shared';
 import { OrdersGateway } from './orders/orders.gateway';
+import { JwtStrategy } from './auth/strategies/jwt.strategy';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { OrdersGateway } from './orders/orders.gateway';
   providers: [
     AppService,
     OrdersGateway,
+    JwtStrategy,
     {
       provide: APP_PIPE,
       useClass: CustomZodValidationPipe,

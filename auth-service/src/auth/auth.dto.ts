@@ -52,3 +52,9 @@ export const RefreshTokenSchema = z.object({
 });
 
 export type RefreshTokenDto = z.infer<typeof RefreshTokenSchema>;
+
+export interface AuthResponse {
+  user?: User;
+  access_token: string;
+  refresh_token: string;
+}

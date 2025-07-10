@@ -1,30 +1,17 @@
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto, RefreshTokenDto, User } from './auth.dto';
+import { RegisterDto, LoginDto, RefreshTokenDto, AuthResponse } from './auth.dto';
 import { Request, Response } from 'express';
-interface AuthResponse {
-    user?: User;
-    access_token: string;
-    refresh_token: string;
-}
-interface RegisterResponse {
-    success: boolean;
-    message?: string;
-}
-interface LogoutResponse {
-    message: string;
-}
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
-    register(body: RegisterDto): Promise<RegisterResponse>;
+    register(body: RegisterDto): Promise<any>;
     login(body: LoginDto): Promise<AuthResponse>;
-    refresh(body: RefreshTokenDto): Promise<AuthResponse>;
-    logout(body: RefreshTokenDto): Promise<LogoutResponse>;
-    me(user: any): Promise<User>;
-    revokeAll(user: any): Promise<LogoutResponse>;
+    refresh(body: RefreshTokenDto): Promise<any>;
+    logout(body: RefreshTokenDto): Promise<any>;
+    me(user: any): Promise<any>;
+    revokeAll(user: any): Promise<any>;
     googleAuth(req: Request, res: Response): Promise<void>;
-    googleCallback(req: Request, res: Response): Promise<AuthResponse | void>;
+    googleCallback(req: Request, res: Response): Promise<any>;
     githubAuth(req: Request, res: Response): Promise<void>;
-    githubCallback(req: Request, res: Response): Promise<AuthResponse | void>;
+    githubCallback(req: Request, res: Response): Promise<any>;
 }
-export {};

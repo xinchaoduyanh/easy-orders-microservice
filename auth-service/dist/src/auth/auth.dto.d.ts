@@ -49,3 +49,8 @@ export declare const RefreshTokenSchema: z.ZodObject<{
     refreshToken?: string;
 }>;
 export type RefreshTokenDto = z.infer<typeof RefreshTokenSchema>;
+export interface AuthResponse {
+    user?: User;
+    access_token: string;
+    refresh_token: string;
+}

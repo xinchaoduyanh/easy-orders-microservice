@@ -32,7 +32,7 @@ let AuthService = class AuthService {
     }
     async generateTokens(user) {
         const payload = {
-            id: user.id,
+            userId: user.id,
             email: user.email,
             provider: user.provider,
             firstName: user.firstName,
@@ -154,7 +154,6 @@ let AuthService = class AuthService {
         if (redirectUri) {
             const userInfo = encodeURIComponent(JSON.stringify(result.user));
             const redirectUrl = `${redirectUri}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&user=${userInfo}`;
-            console.log('BE OAUTH: Sẽ redirect về FE URL =', redirectUrl);
             return { redirectUrl };
         }
         return { result };

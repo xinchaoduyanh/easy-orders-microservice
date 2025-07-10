@@ -57,7 +57,6 @@ let AuthController = class AuthController {
     }
     async googleCallback(req, res) {
         const redirectUri = req.user.redirectUri || '/';
-        console.log('BE OAUTH: redirectUri FE muốn nhận lại =', redirectUri);
         const callbackResult = await this.authService.googleOAuthCallback(req.user, redirectUri);
         if (callbackResult.redirectUrl) {
             return res.redirect(callbackResult.redirectUrl);
@@ -85,7 +84,6 @@ let AuthController = class AuthController {
                 redirectUri = '/';
             }
         }
-        console.log('BE OAUTH: redirectUri FE muốn nhận lại =', redirectUri);
         const callbackResult = await this.authService.githubOAuthCallback(req.user, redirectUri);
         if (callbackResult.redirectUrl) {
             return res.redirect(callbackResult.redirectUrl);
