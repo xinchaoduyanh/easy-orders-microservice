@@ -1,7 +1,11 @@
 import { useAuth } from "./auth-context";
 import envConfig from "./config-env";
 
-export async function fetchWithAuth(url: string, options: RequestInit = {}, getAuth?: () => Promise<{ accessToken: string | null; refreshToken: string | null; user: any; login: Function; logout: Function; }>) {
+export async function fetchWithAuth(
+  url: string,
+  options: RequestInit = {},
+  getAuth?: () => Promise<{ accessToken: string | null; refreshToken: string | null; user: any; login: Function; logout: Function; }>
+) {
   let accessToken = localStorage.getItem("access_token");
   let refreshToken = localStorage.getItem("refresh_token");
   let userStr = localStorage.getItem("user");
@@ -23,8 +27,8 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}, getA
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),
     });
-    if (refreshRes.ok) {
-      const data = await refreshRes.json();
+    const data = await refreshRes.json();
+    if (refreshRes.ok && data.access_token && data.refresh_token && data.user) {
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("refresh_token", data.refresh_token);
       localStorage.setItem("user", JSON.stringify(data.user));

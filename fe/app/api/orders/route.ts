@@ -5,9 +5,13 @@ import envConfig from "@/lib/config-env";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
+  const accessToken = req.headers.get("authorization");
   const res = await fetch(`${envConfig.NEXT_PUBLIC_ORDER_URL}/orders`, {
     method: "POST",
-    headers: { "Content-Type": req.headers.get("content-type") || "application/json" },
+    headers: {
+      "Content-Type": req.headers.get("content-type") || "application/json",
+      ...(accessToken ? { Authorization: accessToken } : {}),
+    },
     body,
   });
   const data = await res.text();

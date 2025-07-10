@@ -6,6 +6,8 @@ import { HttpExceptionFilter } from '@/shared/filter/http_exception.filter';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ZodSerializerInterceptor } from 'nestjs-zod';
 import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe';
+import { KafkaModule } from 'microservice-shared';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -14,6 +16,7 @@ import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe
     }),
     PrismaModule,
     AuthModule,
+    KafkaModule.register(['auth']),
   ],
   providers: [
     {
@@ -24,7 +27,7 @@ import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
-    },  
+    },
   ],
 })
 export class AppModule {}

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { OrderDeliveredNotification } from 'microservice-shared/index';
+import { OrderDeliveredNotification } from 'microservice-shared';
 import { Resend } from 'resend';
 import envConfig from '../../config';
 

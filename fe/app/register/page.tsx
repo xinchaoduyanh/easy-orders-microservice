@@ -212,26 +212,25 @@ export default function RegisterPage() {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Tạo mật khẩu"
+                    placeholder="Mật khẩu"
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
                     required
-                    className="pl-10 pr-10 bg-background/50 border-border/50 focus:bg-background transition-colors"
+                    className="pl-10 bg-background/50 border-border/50 focus:bg-background transition-colors"
                   />
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    tabIndex={-1}
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </Button>
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
+                {/* Hiển thị lỗi password */}
+                {error && formData.password.length < 6 && (
+                  <span className="text-red-500 text-xs">Mật khẩu phải có ít nhất 6 ký tự</span>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -243,11 +242,11 @@ export default function RegisterPage() {
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Nhập lại mật khẩu"
+                    placeholder="Xác nhận mật khẩu"
                     value={formData.confirmPassword}
                     onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                     required
-                    className="pl-10 pr-10 bg-background/50 border-border/50 focus:bg-background transition-colors"
+                    className="pl-10 bg-background/50 border-border/50 focus:bg-background transition-colors"
                   />
                   <Button
                     type="button"
@@ -263,6 +262,10 @@ export default function RegisterPage() {
                     )}
                   </Button>
                 </div>
+                {/* Hiển thị lỗi xác nhận mật khẩu */}
+                {error && formData.password !== formData.confirmPassword && (
+                  <span className="text-red-500 text-xs">Mật khẩu xác nhận không khớp</span>
+                )}
               </div>
 
               <div className="flex items-center space-x-2">
@@ -294,6 +297,14 @@ export default function RegisterPage() {
                 <Alert className="bg-green-50 border-green-200 text-green-800 dark:bg-green-950 dark:border-green-800 dark:text-green-200">
                   <CheckCircle2 className="h-4 w-4" />
                   <AlertDescription>{registerMutation.data?.message || success}</AlertDescription>
+                </Alert>
+              )}
+
+              {/* Hiển thị lỗi tổng quát nếu có */}
+              {error && (
+                <Alert variant="destructive" className="mt-2">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 

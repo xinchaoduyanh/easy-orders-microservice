@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -6,11 +6,18 @@ import { RegisterDto, LoginDto, RefreshTokenDto, User } from './auth.dto';
 import { v4 as uuidv4 } from 'uuid';
 import envConfig from '../../config';
 import { omit } from 'lodash';
+import { ClientKafka } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 // Constants
 const ACCESS_TOKEN_EXPIRES_IN = '15m';
 const REFRESH_TOKEN_EXPIRES_IN = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
 const BCRYPT_ROUNDS = 12;
+
+// Kafka Topics
+const KAFKA_TOPICS = {
+  USER_REGISTERED: 'user_registered',
+} as const;
 
 // Types
 interface TokenPayload {
@@ -33,11 +40,20 @@ interface AuthResponse {
   refresh_token: string;
 }
 
+interface UserRegisteredPayload {
+  userId: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  provider: string;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    @Inject('KAFKA_AUTH_SERVICE') private readonly kafkaClient: ClientKafka,
   ) {}
 
   /**
@@ -90,6 +106,29 @@ export class AuthService {
   }
 
   /**
+   * Emit user registered event to Kafka
+   */
+  private async emitUserRegisteredEvent(user: any): Promise<void> {
+    try {
+      const payload: UserRegisteredPayload = {
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        provider: user.provider,
+      };
+
+      await firstValueFrom(this.kafkaClient.emit(KAFKA_TOPICS.USER_REGISTERED, payload));
+
+      console.log(`User registered event emitted for user: ${user.email}`);
+    } catch (error) {
+      console.error(`Failed to emit user registered event for ${user.email}:`, error);
+      // Don't throw error to avoid breaking registration flow
+      // TODO: Implement retry mechanism or dead letter queue
+    }
+  }
+
+  /**
    * Register new user
    */
   async register(data: RegisterDto): Promise<{ success: boolean; message?: string }> {
@@ -102,7 +141,7 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
-    await this.prisma.user.create({
+    const newUser = await this.prisma.user.create({
       data: {
         email,
         password: hashedPassword,
@@ -112,6 +151,9 @@ export class AuthService {
         status: 'UNVERIFIED',
       },
     });
+
+    // Emit user registered event to create payment account
+    await this.emitUserRegisteredEvent(newUser);
 
     return { success: true, message: 'User registered successfully' };
   }
@@ -198,26 +240,36 @@ export class AuthService {
       data: { isRevoked: true },
     });
 
-    return { message: 'All refresh tokens revoked' };
+    return { message: 'All tokens revoked successfully' };
   }
 
   /**
-   * Handle Google OAuth
+   * Google OAuth login
    */
   async googleOAuth(profile: any): Promise<AuthResponse> {
-    let user = await this.prisma.user.findUnique({ where: { email: profile.email } });
+    const { id, emails, name, photos } = profile;
+    const email = emails[0]?.value;
+
+    if (!email) {
+      throw new UnauthorizedException('Email not provided by Google');
+    }
+
+    let user = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {
       user = await this.prisma.user.create({
         data: {
-          email: profile.email,
+          email,
+          firstName: name?.givenName,
+          lastName: name?.familyName,
+          avatar: photos?.[0]?.value,
           provider: 'GOOGLE',
-          providerId: profile.providerId,
-          firstName: profile.name,
-          avatar: profile.avatar,
           status: 'VERIFIED',
         },
       });
+
+      // Emit user registered event for OAuth users too
+      await this.emitUserRegisteredEvent(user);
     }
 
     this.validateUserStatus(user);
@@ -227,7 +279,7 @@ export class AuthService {
   }
 
   /**
-   * Handle Google OAuth callback with redirect logic
+   * Google OAuth callback
    */
   async googleOAuthCallback(
     profile: any,
@@ -236,10 +288,7 @@ export class AuthService {
     const result = await this.googleOAuth(profile);
 
     if (redirectUri) {
-      // Encode user info as URI component (JSON string)
-      const userInfo = encodeURIComponent(JSON.stringify(result.user));
-      const redirectUrl = `${redirectUri}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&user=${userInfo}`;
-      // Xóa log debug
+      const redirectUrl = `${redirectUri}?access_token=${result.access_token}&refresh_token=${result.refresh_token}`;
       return { redirectUrl };
     }
 
@@ -247,22 +296,28 @@ export class AuthService {
   }
 
   /**
-   * Handle GitHub OAuth
+   * GitHub OAuth login
    */
   async githubOAuth(profile: any): Promise<AuthResponse> {
-    let user = await this.prisma.user.findUnique({ where: { email: profile.email } });
+    const { id, emails, username, photos } = profile;
+    const email = emails?.[0]?.value || `${username}@github.com`;
+
+    let user = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {
       user = await this.prisma.user.create({
         data: {
-          email: profile.email,
+          email,
+          firstName: username,
+          lastName: '',
+          avatar: photos?.[0]?.value,
           provider: 'GITHUB',
-          providerId: profile.providerId,
-          firstName: profile.name,
-          avatar: profile.avatar,
           status: 'VERIFIED',
         },
       });
+
+      // Emit user registered event for OAuth users too
+      await this.emitUserRegisteredEvent(user);
     }
 
     this.validateUserStatus(user);
@@ -272,7 +327,7 @@ export class AuthService {
   }
 
   /**
-   * Handle GitHub OAuth callback with redirect logic
+   * GitHub OAuth callback
    */
   async githubOAuthCallback(
     profile: any,
@@ -281,9 +336,7 @@ export class AuthService {
     const result = await this.githubOAuth(profile);
 
     if (redirectUri) {
-      // Encode user info as URI component (JSON string)
-      const userInfo = encodeURIComponent(JSON.stringify(result.user));
-      const redirectUrl = `${redirectUri}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&user=${userInfo}`;
+      const redirectUrl = `${redirectUri}?access_token=${result.access_token}&refresh_token=${result.refresh_token}`;
       return { redirectUrl };
     }
 
@@ -294,7 +347,7 @@ export class AuthService {
    * Get current user profile
    */
   async me(user: any): Promise<User | null> {
-    const userData = await this.prisma.user.findUnique({ where: { id: user.id } });
-    return this.toUserType(userData);
+    const dbUser = await this.prisma.user.findUnique({ where: { id: user.userId } });
+    return this.toUserType(dbUser);
   }
 }

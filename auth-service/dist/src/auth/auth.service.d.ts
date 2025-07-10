@@ -1,6 +1,7 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterDto, LoginDto, RefreshTokenDto, User } from './auth.dto';
+import { ClientKafka } from '@nestjs/microservices';
 interface AuthResponse {
     user: User;
     access_token: string;
@@ -9,10 +10,12 @@ interface AuthResponse {
 export declare class AuthService {
     private readonly prisma;
     private readonly jwtService;
-    constructor(prisma: PrismaService, jwtService: JwtService);
+    private readonly kafkaClient;
+    constructor(prisma: PrismaService, jwtService: JwtService, kafkaClient: ClientKafka);
     private toUserType;
     private generateTokens;
     private validateUserStatus;
+    private emitUserRegisteredEvent;
     register(data: RegisterDto): Promise<{
         success: boolean;
         message?: string;

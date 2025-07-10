@@ -41,6 +41,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
+
+
   const login = (user: User, accessToken: string, refreshToken: string) => {
     setUser(user);
     setAccessToken(accessToken);

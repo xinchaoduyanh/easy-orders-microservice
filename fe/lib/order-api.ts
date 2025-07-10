@@ -15,11 +15,11 @@ export const getOrderById = async (id: string) => {
   return data.data;
 };
 
-export const createOrder = async (userEmail: string, orderItems: { productId: string; quantity: number }[]) => {
+export const createOrder = async (orderItems: { productId: string; quantity: number }[], userEmail: string) => {
   const res = await fetchWithAuth("/api/orders", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userEmail, orderItems }),
+    body: JSON.stringify({ orderItems, userEmail }),
   });
   if (!res.ok) throw new Error("Failed to create order");
   const data = await res.json();

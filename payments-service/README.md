@@ -96,3 +96,187 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+# Payment Service
+
+Payment service với tính năng quản lý tài khoản người dùng và xử lý thanh toán.
+
+## Tính năng
+
+- **Quản lý tài khoản người dùng**: Tạo tài khoản, kiểm tra số dư, nạp/rút tiền
+- **Xử lý thanh toán**: Kiểm tra số dư và xử lý thanh toán đơn hàng
+- **Lịch sử giao dịch**: Theo dõi tất cả các giao dịch của người dùng
+- **Hoàn tiền**: Hỗ trợ hoàn tiền cho các đơn hàng đã thanh toán
+- **Kafka Integration**: Nhận sự kiện đơn hàng từ Orders Service
+
+## Cài đặt
+
+```bash
+npm install
+```
+
+## Cấu hình Database
+
+1. Tạo file `.env` với các biến môi trường:
+
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/payments_db"
+KAFKA_BROKER=localhost:9092
+PORT=3003
+```
+
+2. Tạo database và chạy migration:
+
+```bash
+npm run db:generate
+npm run db:migrate
+npm run db:seed
+```
+
+## Chạy ứng dụng
+
+```bash
+# Development
+npm run start:dev
+
+# Production
+npm run build
+npm run start:prod
+```
+
+## API Endpoints
+
+### Quản lý tài khoản
+
+#### Tạo tài khoản mới
+
+```http
+POST /payments/accounts
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "initialBalance": 1000
+}
+```
+
+#### Xem số dư
+
+```http
+GET /payments/accounts/{email}/balance
+```
+
+#### Nạp tiền
+
+```http
+PATCH /payments/accounts/{email}/deposit
+Content-Type: application/json
+
+{
+  "amount": 500
+}
+```
+
+#### Rút tiền
+
+```http
+PATCH /payments/accounts/{email}/withdraw
+Content-Type: application/json
+
+{
+  "amount": 200
+}
+```
+
+#### Xem lịch sử giao dịch
+
+```http
+GET /payments/accounts/{email}/transactions
+```
+
+#### Hoàn tiền
+
+```http
+POST /payments/refund/{orderId}
+Content-Type: application/json
+
+{
+  "userEmail": "user@example.com"
+}
+```
+
+## Kafka Events
+
+### Consumer
+
+- **Topic**: `order_events`
+- **Payload**:
+
+```json
+{
+  "orderId": "string",
+  "amount": "number",
+  "userEmail": "string"
+}
+```
+
+### Producer
+
+- **Topic**: `payment_results`
+- **Payload**:
+
+```json
+{
+  "orderId": "string",
+  "status": "confirmed" | "declined"
+}
+```
+
+## Database Schema
+
+### UserAccount
+
+- `id`: String (Primary Key)
+- `email`: String (Unique)
+- `balance`: Float (Default: 0)
+- `createdAt`: DateTime
+- `updatedAt`: DateTime
+
+### Transaction
+
+- `id`: String (Primary Key)
+- `userAccountId`: String (Foreign Key)
+- `orderId`: String
+- `amount`: Float
+- `type`: TransactionType (PAYMENT, REFUND, DEPOSIT, WITHDRAWAL)
+- `status`: TransactionStatus (PENDING, COMPLETED, FAILED, CANCELLED)
+- `createdAt`: DateTime
+- `updatedAt`: DateTime
+
+## Logic xử lý thanh toán
+
+1. **Kiểm tra tài khoản**: Tự động tạo tài khoản nếu chưa tồn tại
+2. **Kiểm tra số dư**: So sánh số dư hiện tại với số tiền cần thanh toán
+3. **Xử lý thanh toán**:
+   - Nếu đủ tiền: Trừ tiền và tạo giao dịch thành công
+   - Nếu không đủ: Tạo giao dịch thất bại và từ chối thanh toán
+4. **Gửi kết quả**: Gửi kết quả về Orders Service qua Kafka
+
+## Development
+
+```bash
+# Generate Prisma client
+npm run db:generate
+
+# Push schema changes
+npm run db:push
+
+# Run migrations
+npm run db:migrate
+
+# Seed database
+npm run db:seed
+
+# Open Prisma Studio
+npm run db:studio
+```

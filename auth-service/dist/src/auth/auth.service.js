@@ -8,6 +8,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
@@ -17,13 +20,19 @@ const bcrypt = require("bcrypt");
 const uuid_1 = require("uuid");
 const config_1 = require("../../config");
 const lodash_1 = require("lodash");
+const microservices_1 = require("@nestjs/microservices");
+const rxjs_1 = require("rxjs");
 const ACCESS_TOKEN_EXPIRES_IN = '15m';
 const REFRESH_TOKEN_EXPIRES_IN = 7 * 24 * 60 * 60 * 1000;
 const BCRYPT_ROUNDS = 12;
+const KAFKA_TOPICS = {
+    USER_REGISTERED: 'user_registered',
+};
 let AuthService = class AuthService {
-    constructor(prisma, jwtService) {
+    constructor(prisma, jwtService, kafkaClient) {
         this.prisma = prisma;
         this.jwtService = jwtService;
+        this.kafkaClient = kafkaClient;
     }
     toUserType(dbUser) {
         if (!dbUser)
@@ -59,6 +68,22 @@ let AuthService = class AuthService {
             throw new common_1.UnauthorizedException('Account is inactive');
         }
     }
+    async emitUserRegisteredEvent(user) {
+        try {
+            const payload = {
+                userId: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                provider: user.provider,
+            };
+            await (0, rxjs_1.firstValueFrom)(this.kafkaClient.emit(KAFKA_TOPICS.USER_REGISTERED, payload));
+            console.log(`User registered event emitted for user: ${user.email}`);
+        }
+        catch (error) {
+            console.error(`Failed to emit user registered event for ${user.email}:`, error);
+        }
+    }
     async register(data) {
         const { email, password, firstName, lastName } = data;
         const existing = await this.prisma.user.findUnique({ where: { email } });
@@ -66,7 +91,7 @@ let AuthService = class AuthService {
             return { success: false, message: 'Email already registered' };
         }
         const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
-        await this.prisma.user.create({
+        const newUser = await this.prisma.user.create({
             data: {
                 email,
                 password: hashedPassword,
@@ -76,6 +101,7 @@ let AuthService = class AuthService {
                 status: 'UNVERIFIED',
             },
         });
+        await this.emitUserRegisteredEvent(newUser);
         return { success: true, message: 'User registered successfully' };
     }
     async login(data) {
@@ -129,21 +155,27 @@ let AuthService = class AuthService {
             where: { userId },
             data: { isRevoked: true },
         });
-        return { message: 'All refresh tokens revoked' };
+        return { message: 'All tokens revoked successfully' };
     }
     async googleOAuth(profile) {
-        let user = await this.prisma.user.findUnique({ where: { email: profile.email } });
+        const { id, emails, name, photos } = profile;
+        const email = emails[0]?.value;
+        if (!email) {
+            throw new common_1.UnauthorizedException('Email not provided by Google');
+        }
+        let user = await this.prisma.user.findUnique({ where: { email } });
         if (!user) {
             user = await this.prisma.user.create({
                 data: {
-                    email: profile.email,
+                    email,
+                    firstName: name?.givenName,
+                    lastName: name?.familyName,
+                    avatar: photos?.[0]?.value,
                     provider: 'GOOGLE',
-                    providerId: profile.providerId,
-                    firstName: profile.name,
-                    avatar: profile.avatar,
                     status: 'VERIFIED',
                 },
             });
+            await this.emitUserRegisteredEvent(user);
         }
         this.validateUserStatus(user);
         const tokens = await this.generateTokens(user);
@@ -152,25 +184,27 @@ let AuthService = class AuthService {
     async googleOAuthCallback(profile, redirectUri) {
         const result = await this.googleOAuth(profile);
         if (redirectUri) {
-            const userInfo = encodeURIComponent(JSON.stringify(result.user));
-            const redirectUrl = `${redirectUri}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&user=${userInfo}`;
+            const redirectUrl = `${redirectUri}?access_token=${result.access_token}&refresh_token=${result.refresh_token}`;
             return { redirectUrl };
         }
         return { result };
     }
     async githubOAuth(profile) {
-        let user = await this.prisma.user.findUnique({ where: { email: profile.email } });
+        const { id, emails, username, photos } = profile;
+        const email = emails?.[0]?.value || `${username}@github.com`;
+        let user = await this.prisma.user.findUnique({ where: { email } });
         if (!user) {
             user = await this.prisma.user.create({
                 data: {
-                    email: profile.email,
+                    email,
+                    firstName: username,
+                    lastName: '',
+                    avatar: photos?.[0]?.value,
                     provider: 'GITHUB',
-                    providerId: profile.providerId,
-                    firstName: profile.name,
-                    avatar: profile.avatar,
                     status: 'VERIFIED',
                 },
             });
+            await this.emitUserRegisteredEvent(user);
         }
         this.validateUserStatus(user);
         const tokens = await this.generateTokens(user);
@@ -179,21 +213,22 @@ let AuthService = class AuthService {
     async githubOAuthCallback(profile, redirectUri) {
         const result = await this.githubOAuth(profile);
         if (redirectUri) {
-            const userInfo = encodeURIComponent(JSON.stringify(result.user));
-            const redirectUrl = `${redirectUri}?access_token=${result.access_token}&refresh_token=${result.refresh_token}&user=${userInfo}`;
+            const redirectUrl = `${redirectUri}?access_token=${result.access_token}&refresh_token=${result.refresh_token}`;
             return { redirectUrl };
         }
         return { result };
     }
     async me(user) {
-        const userData = await this.prisma.user.findUnique({ where: { id: user.id } });
-        return this.toUserType(userData);
+        const dbUser = await this.prisma.user.findUnique({ where: { id: user.userId } });
+        return this.toUserType(dbUser);
     }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
+    __param(2, (0, common_1.Inject)('KAFKA_AUTH_SERVICE')),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        microservices_1.ClientKafka])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

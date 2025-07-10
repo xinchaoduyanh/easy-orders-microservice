@@ -15,6 +15,7 @@ const http_exception_filter_1 = require("./shared/filter/http_exception.filter")
 const core_1 = require("@nestjs/core");
 const nestjs_zod_1 = require("nestjs-zod");
 const custom_zod_validation_pipe_1 = require("./shared/pipes/custom-zod-validation.pipe");
+const microservice_shared_1 = require("microservice-shared");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -27,6 +28,7 @@ exports.AppModule = AppModule = __decorate([
             }),
             prisma_module_1.PrismaModule,
             auth_module_1.AuthModule,
+            microservice_shared_1.KafkaModule.register(['auth']),
         ],
         providers: [
             {

@@ -35,8 +35,8 @@ export function useOrder(orderId?: string) {
 
   // Mutation: Tạo đơn hàng
   const createOrderMutation = useMutation({
-    mutationFn: ({ userEmail, orderItems }: { userEmail: string; orderItems: { productId: string; quantity: number }[] }) =>
-      createOrder(userEmail, orderItems),
+    mutationFn: ({ orderItems }: { orderItems: { productId: string; quantity: number }[] }) =>
+      createOrder(orderItems),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
     },

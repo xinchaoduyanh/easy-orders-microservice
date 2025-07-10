@@ -2,7 +2,6 @@
 version: '3.8'
 
 services:
-  # Zookeeper (required for Kafka)
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     restart: always
@@ -14,22 +13,89 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
-  # Kafka Broker
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     restart: always
     hostname: kafka
     container_name: kafka
     ports:
-      - '9092:9092' # External port for clients (NestJS apps)
-      - '9093:9093' # Internal port for inter-broker communication
+      - '9092:9092'
+      - '9093:9093'
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181 # Kết nối tới Zookeeper
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093,PLAINTEXT_HOST://localhost:9092 # Cấu hình listener cho Kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093,PLAINTEXT_HOST://localhost:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     depends_on:
-      - zookeeper # Đảm bảo Zookeeper khởi động trước Kafka
+      - zookeeper
+
+  microservice-shared:
+    build: ./microservice-shared
+    image: microservice-shared:latest
+    container_name: microservice-shared-builder
+
+  auth-service:
+    build: 
+      context: ./auth-service
+      dockerfile: Dockerfile
+    ports:
+      - '3004:3004'
+    depends_on:
+      - kafka
+      - microservice-shared
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+  orders-service:
+    build: 
+      context: ./orders-service
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    depends_on:
+      - kafka
+      - microservice-shared
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+  payments-service:
+    build: 
+      context: ./payments-service
+      dockerfile: Dockerfile
+    ports:
+      - '3003:3003'
+    depends_on:
+      - kafka
+      - microservice-shared
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+  notifications-service:
+    build: 
+      context: ./notifications-service
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+      - microservice-shared
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+  fe:
+    build: ./fe
+    ports:
+      - '4000:4000'
+    depends_on:
+      - auth-service
+      - orders-service
+      - payments-service
+      - notifications-service
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped

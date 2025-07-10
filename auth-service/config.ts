@@ -14,6 +14,16 @@ const ConfigSchema = z.object({
   GITHUB_CLIENT_SECRET: z.string(),
   GITHUB_CALLBACK_URL: z.string(),
   HTTP_PORT: z.string().default('3004'),
+
+  // Kafka Configuration
+  KAFKA_BROKER: z.string().default('localhost:9092'),
+
+  // Environment
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+
+  // Auth Service Configuration
+  AUTH_SERVICE_NAME: z.string().default('auth-service'),
+  AUTH_CONSUMER_GROUP: z.string().default('auth-consumer-group'),
 });
 
 const configServer = ConfigSchema.safeParse(process.env);

@@ -17,6 +17,7 @@ import {
   Download,
   RefreshCw,
 } from "lucide-react"
+import { cookies } from "next/headers";
 
 export const metadata: Metadata = {
   title: "Dashboard Đơn hàng | Quản lý",
@@ -113,14 +114,8 @@ function DashboardHeader() {
             </div>
           </div>
         </div>
-
-
+        {/* Có thể thêm balance ở đây nếu muốn, nhưng chỉ nên fetch client-side */}
       </div>
-
-
-
-
-
     </div>
   )
 }
@@ -130,14 +125,11 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted dark:from-background dark:to-muted">
       <div className="container mx-auto px-4 py-8 space-y-8">
         <DashboardHeader />
-
         <div className="bg-card rounded-xl shadow-sm border p-6 text-foreground">
           <Suspense fallback={<OrderDashboardSkeleton />}>
             <OrderDashboard />
           </Suspense>
         </div>
-
-
       </div>
     </div>
   )

@@ -77,12 +77,23 @@ export class OrdersService implements OnModuleInit {
       this.ordersGateway.emitOrderCreated(order);
       this.logger.log(`Order ${order.id} created.`);
 
-      this.kafkaClient.emit('order_events', {
-        orderId: order.id,
-        amount: order.totalAmount,
-        userEmail: createOrderDto.userEmail,
-      });
-      this.logger.log(`Payment request for order ${order.id} sent to Kafka.`);
+      this.logger.log(
+        `About to emit payment request for order ${order.id} to Kafka`,
+      );
+      try {
+        await this.kafkaClient
+          .emit('order_events', {
+            orderId: order.id,
+            amount: order.totalAmount,
+            userEmail: createOrderDto.userEmail,
+          })
+          .toPromise();
+        this.logger.log(`Payment request for order ${order.id} sent to Kafka.`);
+      } catch (err) {
+        this.logger.error(
+          `Failed to emit payment request for order ${order.id}: ${err.message}`,
+        );
+      }
 
       return order;
     } catch (error) {

@@ -14,6 +14,10 @@ const ConfigSchema = zod_1.default.object({
     GITHUB_CLIENT_SECRET: zod_1.default.string(),
     GITHUB_CALLBACK_URL: zod_1.default.string(),
     HTTP_PORT: zod_1.default.string().default('3004'),
+    KAFKA_BROKER: zod_1.default.string().default('localhost:9092'),
+    NODE_ENV: zod_1.default.enum(['development', 'production', 'test']).default('development'),
+    AUTH_SERVICE_NAME: zod_1.default.string().default('auth-service'),
+    AUTH_CONSUMER_GROUP: zod_1.default.string().default('auth-consumer-group'),
 });
 const configServer = ConfigSchema.safeParse(process.env);
 if (!configServer.success) {

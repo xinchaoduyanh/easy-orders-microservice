@@ -10,9 +10,10 @@ import { Moon, Sun } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { usePaymentBalance } from "@/hooks/use-balance";
 
 export default function Navigation() {
   const pathname = usePathname()
@@ -20,8 +21,14 @@ export default function Navigation() {
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
   const { theme, setTheme } = useTheme();
   const { user, logout, isAuthenticated } = useAuth();
+  const { data: balance, isLoading, refetch } = usePaymentBalance();
   const [logoutLoading, setLogoutLoading] = useState(false);
   const { toast } = useToast();
+
+  // Fetch balance khi user login
+  useEffect(() => {
+    if (isAuthenticated) refetch();
+  }, [isAuthenticated, refetch]);
 
   const handleLogout = async () => {
     setLogoutLoading(true);
@@ -62,7 +69,7 @@ export default function Navigation() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="text-xl font-bold">
-            Cổng Đơn hàng
+            Cộng Đơn hàng
           </Link>
 
           <div className="flex items-center space-x-2">
@@ -105,6 +112,11 @@ export default function Navigation() {
           <div className="flex items-center gap-4 ml-4">
             {isAuthenticated ? (
               <>
+                <div className="flex items-center gap-4 mr-2">
+                  <span>
+                    Số dư: {isLoading ? "Đang tải..." : (balance !== undefined ? `$${balance}` : "Không xác định")}
+                  </span>
+                </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <div className="flex items-center gap-2 cursor-pointer">
