@@ -17,4 +17,5 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=shared /app ./microservice-shared
 RUN npm install --omit=dev --legacy-peer-deps
 EXPOSE 3003
-CMD ["npm", "run", "start"] 
+COPY .env .env
+CMD ["node", "dist/src/main.js"]

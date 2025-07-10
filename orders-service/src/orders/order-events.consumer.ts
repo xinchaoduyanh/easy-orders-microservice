@@ -20,17 +20,17 @@ export class OrderEventsConsumer implements OnModuleInit {
     @Inject('KAFKA_ORDER_SERVICE') private readonly kafkaClient: ClientKafka,
   ) {
     this.logger.log(
-      'OrderEventsConsumer initialized and listening for payment_results and inventory topics',
+      'OrderEventsConsumer initialized and listening for payments.payment.result.orders and inventory topics',
     );
     this.logger.log(`Process PID: ${process.pid}`);
   }
 
   async onModuleInit() {
-    this.kafkaClient.subscribeToResponseOf('payment_results');
+    this.kafkaClient.subscribeToResponseOf('payments.payment.result.orders');
     await this.kafkaClient.connect();
   }
 
-  @EventPattern('payment_results') // Lắng nghe topic 'payment_results' từ Kafka
+  @EventPattern('payments.payment.result.orders') // Lắng nghe topic từ Payments Service
   async handlePaymentResult(
     @Payload() data: PaymentResultPayload,
     // @Ctx() context: KafkaContext, // Không dùng context, có thể comment out hoặc xóa

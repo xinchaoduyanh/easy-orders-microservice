@@ -14,9 +14,10 @@ const ACCESS_TOKEN_EXPIRES_IN = '15m';
 const REFRESH_TOKEN_EXPIRES_IN = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
 const BCRYPT_ROUNDS = 12;
 
-// Kafka Topics
+// Kafka Topics - Updated to follow standard: Service + Business Logic + Target Service
 const KAFKA_TOPICS = {
-  USER_REGISTERED: 'user_registered',
+  // Auth Service -> Payments Service: User registration event
+  USER_REGISTERED: 'auth.user.registered.payments',
 } as const;
 
 // Types

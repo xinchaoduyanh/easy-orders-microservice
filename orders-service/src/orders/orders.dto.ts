@@ -2,6 +2,14 @@
 import { z } from 'zod';
 import { OrderStatus } from '@prisma/client';
 
+// Kafka Topics - Updated to follow standard: Service + Business Logic + Target Service
+export const ORDERS_KAFKA_TOPICS = {
+  // Orders Service -> Payments Service: Payment request event
+  PAYMENT_REQUEST: 'orders.payment.request.payments',
+  // Orders Service -> Notifications Service: Order delivered event
+  ORDER_DELIVERED: 'orders.order.delivered.notifications',
+} as const;
+
 export const CreateOrderItemZodSchema = z
   .object({
     productId: z.string().min(1, { message: 'Product ID is required' }),

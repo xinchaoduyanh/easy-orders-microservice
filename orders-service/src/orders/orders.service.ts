@@ -16,6 +16,7 @@ import {
 import { Order, OrderStatus } from '@prisma/client';
 import { OrderDeliveredNotification } from 'microservice-shared';
 import { OrdersGateway } from './orders.gateway';
+import { ORDERS_KAFKA_TOPICS } from './orders.dto';
 
 @Injectable()
 export class OrdersService implements OnModuleInit {
@@ -82,7 +83,7 @@ export class OrdersService implements OnModuleInit {
       );
       try {
         await this.kafkaClient
-          .emit('order_events', {
+          .emit(ORDERS_KAFKA_TOPICS.PAYMENT_REQUEST, {
             orderId: order.id,
             amount: order.totalAmount,
             userEmail: createOrderDto.userEmail,
@@ -298,7 +299,7 @@ export class OrdersService implements OnModuleInit {
       deliveredAt: new Date().toISOString(),
     };
     this.logger.log(message.orderDetails);
-    this.kafkaClient.emit('order-delivered', {
+    this.kafkaClient.emit(ORDERS_KAFKA_TOPICS.ORDER_DELIVERED, {
       value: message,
     });
     this.logger.log(

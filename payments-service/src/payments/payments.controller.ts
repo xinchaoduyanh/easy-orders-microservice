@@ -18,6 +18,7 @@ import {
 } from '@nestjs/microservices';
 import { PaymentsService } from './payments.service';
 import { PaymentRequestPayload } from './payments.interface';
+import { PAYMENT_CONSTANTS } from '../constants/payment.constants';
 import {
   CreateUserAccountDto,
   DepositWithdrawDto,
@@ -38,8 +39,8 @@ export class PaymentsController {
     );
   }
 
-  // Kafka Consumer - Listen to the 'order_events' topic from Orders App
-  @MessagePattern('order_events')
+  // Kafka Consumer - Listen to the 'orders.payment.request.payments' topic from Orders Service
+  @MessagePattern(PAYMENT_CONSTANTS.KAFKA_TOPICS.PAYMENT_REQUEST)
   async handlePaymentRequest(
     @Payload() data: PaymentRequestPayload,
     @Ctx() context: KafkaContext,

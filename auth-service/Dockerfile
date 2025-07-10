@@ -8,6 +8,7 @@ COPY --from=shared /app ./microservice-shared
 RUN npm install --legacy-peer-deps
 COPY . .
 RUN npm run build
+RUN ls -la dist/
 
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -15,6 +16,8 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=shared /app ./microservice-shared
-RUN npm install --omit=dev --legacy-peer-deps
+RUN npm install --legacy-peer-deps
+RUN ls -la dist/
 EXPOSE 3004
-CMD ["npm", "run", "start"] 
+COPY .env .env
+CMD ["node", "dist/src/main.js"] 

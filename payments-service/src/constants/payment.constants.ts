@@ -19,9 +19,13 @@ export const PAYMENT_CONSTANTS = {
     CANCELLED: 'CANCELLED',
   },
 
-  // Kafka topics
+  // Kafka topics - Updated to follow standard: Service + Business Logic + Target Service
   KAFKA_TOPICS: {
-    USER_REGISTERED: 'user_registered',
-    PAYMENT_RESULTS: 'payment_results',
+    // Auth Service -> Payments Service: User registration event
+    USER_REGISTERED: 'auth.user.registered.payments',
+    // Orders Service -> Payments Service: Payment request event
+    PAYMENT_REQUEST: 'orders.payment.request.payments',
+    // Payments Service -> Orders Service: Payment result event
+    PAYMENT_RESULTS: 'payments.payment.result.orders',
   },
 } as const;

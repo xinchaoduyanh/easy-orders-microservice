@@ -30,8 +30,8 @@ Hệ thống này đã giải quyết đầy đủ các yêu cầu trên, với 
 
 1. **User** tạo đơn hàng trên frontend (fe/), nhập thông tin sản phẩm, email.
 2. **orders-app** nhận request, tạo đơn hàng ở trạng thái `CREATED` trong DB.
-3. **orders-app** gửi message Kafka (topic `order_events`) yêu cầu thanh toán sang **payments-app**.
-4. **payments-app** nhận message, xử lý mock ( confirmed/declined) dựa trên tổng tiền có đơn hàng, gửi kết quả về lại Kafka.
+3. **orders-app** gửi message Kafka (topic `orders.payment.request.payments`) yêu cầu thanh toán sang **payments-app**.
+4. **payments-app** nhận message, xử lý mock ( confirmed/declined) dựa trên tổng tiền có đơn hàng, gửi kết quả về lại Kafka (topic `payments.payment.result.orders`).
 5. **orders-app** nhận kết quả thanh toán:
    - Nếu `declined` → cập nhật trạng thái đơn hàng thành `CANCELLED`.
    - Nếu `confirmed` → cập nhật trạng thái đơn hàng thành `CONFIRMED`, đồng thời lên lịch tự động chuyển sang `DELIVERED` sau 15 giây.
@@ -39,7 +39,7 @@ Hệ thống này đã giải quyết đầy đủ các yêu cầu trên, với 
 ### **B. Luồng giao hàng & gửi email thông báo**
 
 6. Khi đơn hàng chuyển sang `DELIVERED` (tự động sau 15 giây):
-   - **orders-app** gửi message Kafka (topic `order-delivered`) sang **notifications-app** với thông tin đơn hàng và email khách hàng.
+   - **orders-app** gửi message Kafka (topic `orders.order.delivered.notifications`) sang **notifications-app** với thông tin đơn hàng và email khách hàng.
 7. **notifications-app** lắng nghe topic này, nhận message, gửi email xác nhận giao hàng thành công qua Resend API.
 
 ### **C. Luồng realtime dashboard**
