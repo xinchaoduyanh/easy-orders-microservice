@@ -121,7 +121,7 @@ npm install
 
 ```env
 DATABASE_URL="postgresql://username:password@localhost:5432/payments_db"
-KAFKA_BROKER=localhost:9092
+KAFKA_BROKER=kafka:9093
 PORT=3003
 ```
 

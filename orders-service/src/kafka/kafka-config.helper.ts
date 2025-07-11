@@ -14,7 +14,7 @@ export class KafkaConfigHelper {
       options: {
         client: {
           clientId: `${serviceName}-client`,
-          brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
+          brokers: [process.env.KAFKA_BROKER || 'kafka:9093'],
         },
         consumer: {
           groupId: `${serviceName}-consumer-group`,
