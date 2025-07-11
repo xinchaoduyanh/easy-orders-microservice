@@ -30,7 +30,6 @@ import { CurrentUser, AuthUser } from '../shared';
 import { JwtAuthGuard } from '../shared/guards/jwt-auth.guard';
 
 @Controller('payments')
-
 export class PaymentsController {
   private readonly logger = new Logger(PaymentsController.name);
 
@@ -65,12 +64,14 @@ export class PaymentsController {
   }
 
   @Get('accounts/balance')
+  @UseGuards(JwtAuthGuard)
   @ApiResponseOk('User balance retrieved successfully')
   async getUserBalance(@CurrentUser() user: AuthUser) {
     return this.paymentsService.getUserBalance(user.userId);
   }
 
   @Patch('accounts/deposit')
+  @UseGuards(JwtAuthGuard)
   @UsePipes(new CustomZodValidationPipe(DepositWithdrawDto))
   @ApiResponseOk('Amount deposited successfully')
   async deposit(
@@ -81,6 +82,7 @@ export class PaymentsController {
   }
 
   @Patch('accounts/withdraw')
+  @UseGuards(JwtAuthGuard)
   @UsePipes(new CustomZodValidationPipe(DepositWithdrawDto))
   @ApiResponseOk('Amount withdrawn successfully')
   async withdraw(
@@ -91,12 +93,14 @@ export class PaymentsController {
   }
 
   @Get('accounts/transactions')
+  @UseGuards(JwtAuthGuard)
   @ApiResponseOk('User transactions retrieved successfully')
   async getTransactions(@CurrentUser() user: AuthUser) {
     return this.paymentsService.getTransactions(user.userId);
   }
 
   @Post('refund/:orderId')
+  @UseGuards(JwtAuthGuard)
   @ApiResponseOk('Payment refunded successfully')
   async refundPayment(
     @Param('orderId') orderId: string,
