@@ -1,24 +1,14 @@
-// payments-app/src/payments/payments.controller.ts
 import {
   Controller,
-  Logger,
-  Post,
   Get,
+  Post,
   Patch,
   Body,
   Param,
   UsePipes,
   UseGuards,
 } from '@nestjs/common';
-import {
-  MessagePattern,
-  Payload,
-  Ctx,
-  KafkaContext,
-} from '@nestjs/microservices';
 import { PaymentsService } from './payments.service';
-import { PaymentRequestPayload } from './payments.interface';
-import { PAYMENT_CONSTANTS } from '../constants/payment.constants';
 import {
   CreateUserAccountDto,
   DepositWithdrawDto,
@@ -31,30 +21,8 @@ import { JwtAuthGuard } from '../shared/guards/jwt-auth.guard';
 
 @Controller('payments')
 @UseGuards(JwtAuthGuard)
-export class PaymentsController {
-  private readonly logger = new Logger(PaymentsController.name);
-
-  constructor(private readonly paymentsService: PaymentsService) {
-    this.logger.log(
-      'PaymentService started and listening to Kafka topic order_events',
-    );
-  }
-
-  // Kafka Consumer - Listen to the 'orders.payment.request.payments' topic from Orders Service
-  @MessagePattern(PAYMENT_CONSTANTS.KAFKA_TOPICS.PAYMENT_REQUEST)
-  async handlePaymentRequest(
-    @Payload() data: PaymentRequestPayload,
-    @Ctx() context: KafkaContext,
-  ) {
-    const originalMessage = context.getMessage();
-    this.logger.log(
-      `Received payment request for order ID: ${data.orderId} from Kafka. Message: ${originalMessage?.value?.toString()}`,
-    );
-    this.logger.log(`Received payment request data: ${JSON.stringify(data)}`);
-    await this.paymentsService.processPayment(data);
-  }
-
-  // REST API Endpoints
+export class PaymentsRestController {
+  constructor(private readonly paymentsService: PaymentsService) {}
 
   @Post('accounts')
   @UsePipes(new CustomZodValidationPipe(CreateUserAccountDto))
