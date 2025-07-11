@@ -3,14 +3,12 @@ import envConfig from "@/lib/config-env";
 
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
-  
   const res = await fetch(`${envConfig.NEXT_PUBLIC_ORDER_URL}/orders/me`, {
     headers: {
-      "Authorization": authHeader || "",
-      "Content-Type": "application/json",
+      ...(authHeader ? { Authorization: authHeader } : {}),
+      "content-type": "application/json",
     },
   });
-  
   const data = await res.text();
   return new NextResponse(data, {
     status: res.status,
