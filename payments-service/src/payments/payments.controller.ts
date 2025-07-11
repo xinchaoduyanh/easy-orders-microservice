@@ -8,7 +8,6 @@ import {
   Body,
   Param,
   UsePipes,
-  UseGuards,
 } from '@nestjs/common';
 import {
   MessagePattern,
@@ -26,10 +25,9 @@ import {
 } from './payments.dto';
 import CustomZodValidationPipe from '../shared/pipes/custom-zod-validation.pipe';
 import { ApiResponseOk } from '../shared/decorators/response.decorator';
-import { JwtAuthGuard, CurrentUser, AuthUser } from '../shared';
+import { CurrentUser, AuthUser } from '../shared';
 
 @Controller('payments')
-@UseGuards(JwtAuthGuard)
 export class PaymentsController {
   private readonly logger = new Logger(PaymentsController.name);
 
