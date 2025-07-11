@@ -13,9 +13,9 @@ Hệ thống này đã giải quyết đầy đủ các yêu cầu trên, với 
 
 ---
 
-## 2. Kiến trúc tổng thể & các service
+## 2. Kiến trúc tổng thể & các service 
 
-- **orders-app**: Quản lý đơn hàng, trạng thái, tự động chuyển trạng thái, giao tiếp với các service khác qua Kafka.
+- **orders-app**: Quản lý đơn hàng, trạng thái và tự động chuyển trạng thái, giao tiếp với các service khác qua Kafka.
 - **payments-app**: Xử lý thanh toán, nhận yêu cầu từ orders-app, trả về kết quả (confirmed/declined) qua Kafka.
 - **notifications-app**: Lắng nghe Kafka, gửi email thông báo khi đơn hàng được giao thành công (DELIVERED) qua Resend.
 - **fe/**: Frontend React, dashboard realtime, tạo/hủy đơn hàng, xem chi tiết, trạng thái, timeline, v.v.
