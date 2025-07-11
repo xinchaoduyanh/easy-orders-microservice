@@ -14,7 +14,7 @@ import {
   OrderItemForDbCreation,
 } from './orders.dto';
 import { Order, OrderStatus } from '@prisma/client';
-import { OrderDeliveredNotification } from 'microservice-shared';
+import { OrderDeliveredNotification } from '../kafka/interfaces';
 import { OrdersGateway } from './orders.gateway';
 import { ORDERS_KAFKA_TOPICS } from './orders.dto';
 

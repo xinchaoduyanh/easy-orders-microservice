@@ -1,7 +1,7 @@
 import { Injectable, OnModuleInit, Inject, Logger } from '@nestjs/common';
 import { ResendService } from '../resend/resend.service';
 import { ClientProxy } from '@nestjs/microservices';
-import { OrderDeliveredNotification } from 'microservice-shared';
+import { OrderDeliveredNotification } from './interfaces';
 
 @Injectable()
 export class KafkaService implements OnModuleInit {

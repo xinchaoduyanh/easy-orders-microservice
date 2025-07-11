@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions } from '@nestjs/microservices';
-import { createKafkaConnectConfig } from 'microservice-shared';
+import { createKafkaConnectConfig } from './kafka/kafka-config.helper';
 import envConfig from 'config';
 
 async function bootstrap() {

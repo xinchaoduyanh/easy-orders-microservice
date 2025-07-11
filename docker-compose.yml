@@ -32,11 +32,6 @@ services:
     depends_on:
       - zookeeper
 
-  microservice-shared:
-    build: ./microservice-shared
-    image: microservice-shared:latest
-    container_name: microservice-shared-builder
-
   auth-service:
     build: 
       context: ./auth-service
@@ -45,7 +40,6 @@ services:
       - '3004:3004'
     depends_on:
       - kafka
-      - microservice-shared
     environment:
       - NODE_ENV=production
     restart: unless-stopped
@@ -58,7 +52,6 @@ services:
       - '3000:3000'
     depends_on:
       - kafka
-      - microservice-shared
     environment:
       - NODE_ENV=production
     restart: unless-stopped
@@ -71,7 +64,6 @@ services:
       - '3003:3003'
     depends_on:
       - kafka
-      - microservice-shared
     environment:
       - NODE_ENV=production
     restart: unless-stopped
@@ -82,7 +74,6 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - kafka
-      - microservice-shared
     environment:
       - NODE_ENV=production
     restart: unless-stopped

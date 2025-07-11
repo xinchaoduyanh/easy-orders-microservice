@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { KafkaService } from './kafka/kafka.service';
 import { ResendService } from './resend/resend.service';
-import { KafkaModule } from 'microservice-shared';
+import { KafkaModule } from './kafka/kafka.module';
 import { OrderDeliveredConsumer } from './kafka/order-delivered.consumer';
 @Module({
   imports: [

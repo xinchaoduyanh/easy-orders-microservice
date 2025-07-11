@@ -8,7 +8,7 @@ const ConfigSchema = z.object({
   DATABASE_URL: z.string(),
 
   // Kafka
-  KAFKA_BROKER: z.string().default('localhost:9092'),
+  KAFKA_BROKER: z.string().default('kafka:9093'),
 
   // Server
   HTTP_PORT: z.string().default('3003'),

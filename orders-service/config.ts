@@ -8,7 +8,7 @@ config({
 
 const ConfigSchema = z.object({
   DATABASE_URL: z.string(),
-  KAFKA_BROKER: z.string().default('localhost:9092'),
+  KAFKA_BROKER: z.string().default('kafka:9093'),
   HTTP_PORT: z.string().default('3000'),
   JWT_SECRET: z.string(),
   JWT_REFRESH_SECRET: z.string(),

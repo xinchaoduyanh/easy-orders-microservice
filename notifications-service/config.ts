@@ -5,7 +5,7 @@ config({ path: '.env' });
 
 const ConfigSchema = z.object({
   RESEND_API_KEY: z.string(),
-  KAFKA_BROKER: z.string().default('localhost:9092'),
+  KAFKA_BROKER: z.string().default('kafka:9093'),
 });
 
 const configServer = ConfigSchema.safeParse(process.env);

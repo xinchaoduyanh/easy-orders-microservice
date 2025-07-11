@@ -26,7 +26,7 @@ const ACCESS_TOKEN_EXPIRES_IN = '15m';
 const REFRESH_TOKEN_EXPIRES_IN = 7 * 24 * 60 * 60 * 1000;
 const BCRYPT_ROUNDS = 12;
 const KAFKA_TOPICS = {
-    USER_REGISTERED: 'user_registered',
+    USER_REGISTERED: 'auth.user.registered.payments',
 };
 let AuthService = class AuthService {
     constructor(prisma, jwtService, kafkaClient) {

@@ -9,7 +9,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { HttpExceptionFilter } from './shared/filter/http_exception.filter';
 import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe';
 import { ZodSerializerInterceptor } from 'nestjs-zod';
-import { KafkaModule } from 'microservice-shared';
+import { KafkaModule } from './kafka/kafka.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './shared/strategies/jwt.strategy';
 

@@ -10,7 +10,7 @@ import { HttpExceptionFilter } from 'src/shared/filter/http_exception.filter';
 import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe';
 import { ZodSerializerInterceptor } from 'nestjs-zod';
 import { ProductsModule } from './products/products.module';
-import { KafkaModule } from 'microservice-shared';
+import { KafkaModule } from './kafka/kafka.module';
 import { OrdersGateway } from './orders/orders.gateway';
 import { JwtStrategy } from './auth/strategies/jwt.strategy';
 

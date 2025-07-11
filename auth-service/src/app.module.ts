@@ -6,7 +6,7 @@ import { HttpExceptionFilter } from '@/shared/filter/http_exception.filter';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ZodSerializerInterceptor } from 'nestjs-zod';
 import CustomZodValidationPipe from 'src/shared/pipes/custom-zod-validation.pipe';
-import { KafkaModule } from 'microservice-shared';
+import { KafkaModule } from './kafka/kafka.module';
 
 @Module({
   imports: [

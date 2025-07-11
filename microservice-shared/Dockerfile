@@ -10,4 +10,4 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
-CMD ["ls", "-l", "dist"] 
+COPY --from=builder /app/dist/index.js ./index.js 

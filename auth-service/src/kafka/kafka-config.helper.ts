@@ -1,4 +1,4 @@
-// shared-kafka/kafka-config.helper.ts
+// kafka-config.helper.ts
 import { Injectable } from '@nestjs/common';
 import { Transport, ClientOptions, MicroserviceOptions } from '@nestjs/microservices';
 
@@ -10,7 +10,7 @@ export class KafkaConfigHelper {
       options: {
         client: {
           clientId: `${serviceName}-client`,
-          brokers: [process.env.KAFKA_BROKER || 'kafka:9093'],
+          brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
         },
         consumer: {
           groupId: `${serviceName}-consumer-group`,
@@ -21,8 +21,12 @@ export class KafkaConfigHelper {
     };
   }
 }
+
 // Utility function để tạo cấu hình cho app.connectMicroservice()
-export function createKafkaConnectConfig(serviceName: string, brokers: string[]): MicroserviceOptions {
+export function createKafkaConnectConfig(
+  serviceName: string,
+  brokers: string[],
+): MicroserviceOptions {
   return {
     transport: Transport.KAFKA,
     options: {

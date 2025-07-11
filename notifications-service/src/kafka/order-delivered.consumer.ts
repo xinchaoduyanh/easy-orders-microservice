@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { ResendService } from '../resend/resend.service';
-import { OrderDeliveredNotification } from 'microservice-shared';
+import { OrderDeliveredNotification } from './interfaces';
 import { NOTIFICATION_CONSTANTS } from '../constants/notification.constants';
 
 @Controller()

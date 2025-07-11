@@ -16,7 +16,7 @@ const ConfigSchema = z.object({
   HTTP_PORT: z.string().default('3004'),
 
   // Kafka Configuration
-  KAFKA_BROKER: z.string().default('localhost:9092'),
+  KAFKA_BROKER: z.string().default('kafka:9093'),
 
   // Environment
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
