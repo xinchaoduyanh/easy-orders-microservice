@@ -78,7 +78,7 @@ export default function CartPage() {
         quantity: item.quantity,
       }))
 
-      const order = await createOrder(userEmail, orderItems)
+      const order = await createOrder(orderItems, userEmail)
 
       toast({
         title: "Thành công",
