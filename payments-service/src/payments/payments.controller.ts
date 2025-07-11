@@ -8,6 +8,7 @@ import {
   Body,
   Param,
   UsePipes,
+  UseGuards,
 } from '@nestjs/common';
 import {
   MessagePattern,
@@ -26,8 +27,10 @@ import {
 import CustomZodValidationPipe from '../shared/pipes/custom-zod-validation.pipe';
 import { ApiResponseOk } from '../shared/decorators/response.decorator';
 import { CurrentUser, AuthUser } from '../shared';
+import { JwtAuthGuard } from '../shared/guards/jwt-auth.guard';
 
 @Controller('payments')
+
 export class PaymentsController {
   private readonly logger = new Logger(PaymentsController.name);
 
@@ -54,6 +57,7 @@ export class PaymentsController {
   // REST API Endpoints
 
   @Post('accounts')
+  @UseGuards(JwtAuthGuard)
   @UsePipes(new CustomZodValidationPipe(CreateUserAccountDto))
   @ApiResponseOk('User account created successfully')
   async createUserAccount(@CurrentUser() user: AuthUser) {
